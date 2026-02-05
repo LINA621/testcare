@@ -14,18 +14,20 @@ const deleteUser = (id: number) => {
 export default function UserManagementPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterRole, setFilterRole] = useState("")
-  const [showModal, setShowModal] = useState(false)
-  const [showAssistantModal, setShowAssistantModal] = useState(false)
+  const [showDoctorModal, setShowDoctorModal] = useState(false)
+  const [showSecretaryModal, setShowSecretaryModal] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   
-  // Modal form state
-  const [selectedRole, setSelectedRole] = useState("Doctor")
-  const [fullName, setFullName] = useState("")
-  const [email, setEmail] = useState("")
-  const [licenseNumber, setLicenseNumber] = useState("")
-  const [specialty, setSpecialty] = useState("")
-  const [assignedDoctor, setAssignedDoctor] = useState("")
-  const [password, setPassword] = useState("")
+  // Doctor form state
+  const [doctorEmail, setDoctorEmail] = useState("")
+  const [doctorPassword, setDoctorPassword] = useState("")
+  const [numeroLicence, setNumeroLicence] = useState("")
+  const [specialiteId, setSpecialiteId] = useState("")
+  
+  // Secretary form state
+  const [secretaryEmail, setSecretaryEmail] = useState("")
+  const [secretaryPassword, setSecretaryPassword] = useState("")
+  const [medecinId, setMedecinId] = useState("")
   
   // Mock specialties and doctors list (would be fetched from API)
   const [specialties, setSpecialties] = useState([
@@ -88,53 +90,80 @@ export default function UserManagementPage() {
     )
   }
 
-  const handleModalClose = () => {
-    setShowModal(false)
-    // Reset form
-    setSelectedRole("Doctor")
-    setFullName("")
-    setEmail("")
-    setLicenseNumber("")
-    setSpecialty("")
-    setAssignedDoctor("")
-    setPassword("")
+  const handleDoctorModalClose = () => {
+    setShowDoctorModal(false)
+    // Reset doctor form
+    setDoctorEmail("")
+    setDoctorPassword("")
+    setNumeroLicence("")
+    setSpecialiteId("")
   }
 
-  const handleCreateUser = () => {
+  const handleSecretaryModalClose = () => {
+    setShowSecretaryModal(false)
+    // Reset secretary form
+    setSecretaryEmail("")
+    setSecretaryPassword("")
+    setMedecinId("")
+  }
+
+  const handleCreateDoctor = () => {
     // Validation
-    if (!fullName || !email || !password) {
+    if (!doctorEmail || !doctorPassword || !numeroLicence || !specialiteId) {
       alert("Please fill in all required fields")
       return
     }
 
-    if (selectedRole === "Doctor" && (!licenseNumber || !specialty)) {
-      alert("Please fill in License Number and Specialty for Doctor")
-      return
-    }
-
-    // API Integration placeholder
-    console.log("[v0] Creating user with data:", {
-      fullName,
-      email,
-      role: selectedRole,
-      licenseNumber: selectedRole === "Doctor" ? licenseNumber : undefined,
-      specialty: selectedRole === "Doctor" ? specialty : undefined,
-      assignedDoctor: selectedRole === "Assistant" ? assignedDoctor : undefined,
-      password,
+    // API Integration: POST /medecin/create
+    console.log("[v0] Creating doctor with data:", {
+      email: doctorEmail,
+      mot_de_passe: doctorPassword,
+      numero_licence: numeroLicence,
+      specialite_id: specialiteId,
+      role: "Doctor",
     })
 
-    // Add user to list (temporary)
-    const newUser = {
+    // Add doctor to list (temporary)
+    const newDoctor = {
       id: users.length + 1,
-      name: fullName,
-      email,
-      role: selectedRole,
+      name: `Dr. ${doctorEmail.split("@")[0]}`,
+      email: doctorEmail,
+      role: "Doctor",
       status: "Active",
       joinDate: new Date().toISOString().split("T")[0],
     }
-    setUsers([...users, newUser])
+    setUsers([...users, newDoctor])
 
-    handleModalClose()
+    handleDoctorModalClose()
+  }
+
+  const handleCreateSecretary = () => {
+    // Validation
+    if (!secretaryEmail || !secretaryPassword) {
+      alert("Please fill in all required fields")
+      return
+    }
+
+    // API Integration: POST /secretaire/create
+    console.log("[v0] Creating secretary with data:", {
+      email: secretaryEmail,
+      mot_de_passe: secretaryPassword,
+      medecin_id: medecinId || null,
+      role: "Assistant",
+    })
+
+    // Add secretary to list (temporary)
+    const newSecretary = {
+      id: users.length + 1,
+      name: `Secretary ${secretaryEmail.split("@")[0]}`,
+      email: secretaryEmail,
+      role: "Assistant",
+      status: "Active",
+      joinDate: new Date().toISOString().split("T")[0],
+    }
+    setUsers([...users, newSecretary])
+
+    handleSecretaryModalClose()
   }
 
   const itemsPerPage = 5
@@ -147,9 +176,14 @@ export default function UserManagementPage() {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-[#0A1F44]">Users Management</h1>
-          <Button onClick={() => setShowModal(true)} className="bg-[#0066FF] text-white hover:bg-[#0052CC]">
-            + Add New User
-          </Button>
+          <div className="flex gap-3">
+            <Button onClick={() => setShowDoctorModal(true)} className="bg-[#0066FF] text-white hover:bg-[#0052CC]">
+              + Add Doctor
+            </Button>
+            <Button onClick={() => setShowSecretaryModal(true)} className="bg-[#0066FF] text-white hover:bg-[#0052CC]">
+              + Add Secretary
+            </Button>
+          </div>
         </div>
 
         {/* Search and Filter Bar */}
@@ -280,8 +314,8 @@ export default function UserManagementPage() {
           </button>
         </div>
 
-        {/* Add User Modal */}
-        {showModal && (
+        {/* Add Doctor Modal */}
+        {showDoctorModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <Card className="w-full max-w-md m-0 max-h-[90vh] overflow-y-auto">
               <div className="bg-[#1e3a8a] p-6 flex items-center justify-between sticky top-0 z-10">
@@ -289,121 +323,63 @@ export default function UserManagementPage() {
                   <span className="text-[#0066FF]">Med</span>
                   <span className="text-white">Care</span>
                 </span>
-                <button onClick={handleModalClose} className="text-white hover:bg-[#0052CC] p-1 rounded">
+                <button onClick={handleDoctorModalClose} className="text-white hover:bg-[#0052CC] p-1 rounded">
                   ✕
                 </button>
               </div>
               <CardContent className="p-6">
-                <h2 className="text-xl font-bold text-[#0A1F44] mb-4">Add New User</h2>
+                <h2 className="text-xl font-bold text-[#0A1F44] mb-4">Add New Doctor</h2>
                 <form className="space-y-4">
-                  {/* Common Fields */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
-                    <Input 
-                      type="text" 
-                      placeholder="Enter full name"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                    />
-                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
                     <Input 
                       type="email" 
                       placeholder="Enter email address"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      value={doctorEmail}
+                      onChange={(e) => setDoctorEmail(e.target.value)}
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Role *</label>
-                    <select 
-                      value={selectedRole}
-                      onChange={(e) => setSelectedRole(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0066FF] focus:border-transparent"
-                    >
-                      <option value="Doctor">Doctor</option>
-                      <option value="Assistant">Assistant</option>
-                      <option value="Admin">Admin</option>
-                    </select>
-                  </div>
-
-                  {/* Doctor-Specific Fields */}
-                  {selectedRole === "Doctor" && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">License Number *</label>
-                        <Input 
-                          type="text" 
-                          placeholder="Enter license number"
-                          value={licenseNumber}
-                          onChange={(e) => setLicenseNumber(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Specialty *</label>
-                        <select 
-                          value={specialty}
-                          onChange={(e) => setSpecialty(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0066FF] focus:border-transparent"
-                        >
-                          <option value="">Select a specialty</option>
-                          {specialties.map((spec) => (
-                            <option key={spec.id} value={spec.id}>{spec.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </>
-                  )}
-
-                  {/* Assistant-Specific Fields */}
-                  {selectedRole === "Assistant" && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">License Number</label>
-                        <Input 
-                          type="text" 
-                          placeholder="Enter license number (optional)"
-                          value={licenseNumber}
-                          onChange={(e) => setLicenseNumber(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Assigned Doctor</label>
-                        <select 
-                          value={assignedDoctor}
-                          onChange={(e) => setAssignedDoctor(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0066FF] focus:border-transparent"
-                        >
-                          <option value="">Select a doctor (optional)</option>
-                          {doctors.map((doc) => (
-                            <option key={doc.id} value={doc.id}>{doc.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </>
-                  )}
-
-                  {/* Password Field */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Password *</label>
                     <Input 
                       type="password" 
                       placeholder="Enter password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      value={doctorPassword}
+                      onChange={(e) => setDoctorPassword(e.target.value)}
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Numero Licence *</label>
+                    <Input 
+                      type="text" 
+                      placeholder="Enter license number"
+                      value={numeroLicence}
+                      onChange={(e) => setNumeroLicence(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Specialite *</label>
+                    <select 
+                      value={specialiteId}
+                      onChange={(e) => setSpecialiteId(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0066FF] focus:border-transparent"
+                    >
+                      <option value="">Select a specialty</option>
+                      {specialties.map((spec) => (
+                        <option key={spec.id} value={spec.id}>{spec.name}</option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="flex gap-3 pt-4">
-                    <Button onClick={handleModalClose} variant="outline" className="flex-1">
+                    <Button onClick={handleDoctorModalClose} variant="outline" className="flex-1">
                       Cancel
                     </Button>
                     <Button
-                      onClick={handleCreateUser}
+                      onClick={handleCreateDoctor}
                       className="flex-1 bg-[#0066FF] text-white hover:bg-[#0052CC]"
                     >
-                      Create User
+                      Create Doctor
                     </Button>
                   </div>
                 </form>
@@ -412,7 +388,70 @@ export default function UserManagementPage() {
           </div>
         )}
 
+        {/* Add Secretary Modal */}
+        {showSecretaryModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-md m-0 max-h-[90vh] overflow-y-auto">
+              <div className="bg-[#1e3a8a] p-6 flex items-center justify-between sticky top-0 z-10">
+                <span className="text-xl font-bold text-white">
+                  <span className="text-[#0066FF]">Med</span>
+                  <span className="text-white">Care</span>
+                </span>
+                <button onClick={handleSecretaryModalClose} className="text-white hover:bg-[#0052CC] p-1 rounded">
+                  ✕
+                </button>
+              </div>
+              <CardContent className="p-6">
+                <h2 className="text-xl font-bold text-[#0A1F44] mb-4">Add New Secretary</h2>
+                <form className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                    <Input 
+                      type="email" 
+                      placeholder="Enter email address"
+                      value={secretaryEmail}
+                      onChange={(e) => setSecretaryEmail(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Password *</label>
+                    <Input 
+                      type="password" 
+                      placeholder="Enter password"
+                      value={secretaryPassword}
+                      onChange={(e) => setSecretaryPassword(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Medecin (Doctor)</label>
+                    <select 
+                      value={medecinId}
+                      onChange={(e) => setMedecinId(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0066FF] focus:border-transparent"
+                    >
+                      <option value="">Select a doctor (optional)</option>
+                      {doctors.map((doc) => (
+                        <option key={doc.id} value={doc.id}>{doc.name}</option>
+                      ))}
+                    </select>
+                  </div>
 
+                  <div className="flex gap-3 pt-4">
+                    <Button onClick={handleSecretaryModalClose} variant="outline" className="flex-1">
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleCreateSecretary}
+                      className="flex-1 bg-[#0066FF] text-white hover:bg-[#0052CC]"
+                    >
+                      Create Secretary
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   )
