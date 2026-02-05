@@ -9,7 +9,7 @@ export default function AssistantDashboard() {
   const [stats, setStats] = useState({
     totalAppointments: 0,
     todayAppointments: 0,
-    pendingPatients: 0,
+    totalPatients: 0,
   })
   const [recentActivities, setRecentActivities] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -86,6 +86,26 @@ export default function AssistantDashboard() {
             </CardContent>
           </Card>
 
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Total Patients</p>
+                  <p className="text-3xl font-bold text-[#0A1F44]">0</p>
+                </div>
+                <div className="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center opacity-60">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
         </div>
 

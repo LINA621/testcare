@@ -12,10 +12,7 @@ export default function AssistantProfile() {
     fullName: 'Samira Fadel',
     email: 'samira.fadel@medcare.com',
     phone: '+212 612345678',
-    department: 'Medical Administration',
-    employeeId: 'ASS-2024-001',
     dateJoined: '2024-01-15',
-    about: 'Experienced medical assistant with a focus on patient care coordination and administrative support.',
   })
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -59,9 +56,8 @@ export default function AssistantProfile() {
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-[#0A1F44]">{formData.fullName}</h2>
-                <p className="text-gray-600 mt-1">{formData.department}</p>
-                <p className="text-sm text-gray-500 mt-2">ID: {formData.employeeId}</p>
-                <p className="text-sm text-gray-500">Joined: {new Date(formData.dateJoined).toLocaleDateString()}</p>
+                <p className="text-gray-600 mt-1">Medical Assistant</p>
+                <p className="text-sm text-gray-500 mt-2">Joined: {new Date(formData.dateJoined).toLocaleDateString()}</p>
               </div>
             </div>
           </CardContent>
@@ -113,32 +109,6 @@ export default function AssistantProfile() {
                 />
               </div>
 
-              {/* Department */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Department</label>
-                <Input
-                  type="text"
-                  name="department"
-                  value={formData.department}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  className="disabled:bg-gray-100 disabled:cursor-not-allowed"
-                />
-              </div>
-
-              {/* Employee ID */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Employee ID</label>
-                <Input
-                  type="text"
-                  name="employeeId"
-                  value={formData.employeeId}
-                  onChange={handleInputChange}
-                  disabled={true}
-                  className="disabled:bg-gray-100 disabled:cursor-not-allowed"
-                />
-              </div>
-
               {/* Date Joined */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Date Joined</label>
@@ -153,17 +123,10 @@ export default function AssistantProfile() {
               </div>
             </div>
 
-            {/* About */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">About</label>
-              <textarea
-                name="about"
-                value={formData.about}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-                rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066FF] disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
-              />
+            {/* Account Type */}
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="font-semibold text-blue-900">Account Type</p>
+              <p className="text-sm text-blue-700 mt-1">Medical Assistant</p>
             </div>
 
             {/* Save Button */}
@@ -186,30 +149,7 @@ export default function AssistantProfile() {
           </CardContent>
         </Card>
 
-        {/* Account Status */}
-        <Card className="border-0 shadow-sm">
-          <CardHeader>
-            <CardTitle>Account Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between py-3 px-4 bg-green-50 rounded-lg border border-green-200">
-                <div>
-                  <p className="font-semibold text-green-900">Account Status</p>
-                  <p className="text-sm text-green-700">Your account is active</p>
-                </div>
-                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-              </div>
 
-              <div className="flex items-center justify-between py-3 px-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div>
-                  <p className="font-semibold text-blue-900">Account Type</p>
-                  <p className="text-sm text-blue-700">Medical Assistant</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </DashboardLayout>
   )

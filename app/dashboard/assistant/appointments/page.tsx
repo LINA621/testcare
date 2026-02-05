@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import NewAppointmentModal from '@/components/modals/NewAppointmentModal'
@@ -31,6 +31,8 @@ export default function AssistantAppointments() {
   const [dateFilter, setDateFilter] = useState('')
   const [doctorFilter, setDoctorFilter] = useState('')
   const [showNewAppointmentModal, setShowNewAppointmentModal] = useState(false)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+  const [appointmentToCancel, setAppointmentToCancel] = useState<string | null>(null)
 
   // New Appointments filters
   const [newAptSearch, setNewAptSearch] = useState('')
@@ -125,8 +127,18 @@ export default function AssistantAppointments() {
     })
 
   const handleCancelAppointment = (appointmentId: string) => {
-    console.log('[v0] Cancel appointment:', appointmentId)
-    // API call to cancel appointment would go here
+    setAppointmentToCancel(appointmentId)
+    setShowCancelConfirm(true)
+  }
+
+  const confirmCancelAppointment = () => {
+    if (appointmentToCancel) {
+      console.log('[v0] Confirmed cancel appointment:', appointmentToCancel)
+      // API call: PUT /secretaire/rendezvous/annuler/{id}
+      setShowCancelConfirm(false)
+      setAppointmentToCancel(null)
+      // Update appointments list (remove the canceled one)
+    }
   }
 
   const handleNewAppointmentConfirm = (data: AppointmentFormData) => {
@@ -311,6 +323,36 @@ export default function AssistantAppointments() {
         onClose={() => setShowNewAppointmentModal(false)}
         onConfirm={handleNewAppointmentConfirm}
       />
+
+      {/* Cancel Confirmation Dialog */}
+      {showCancelConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-sm m-0">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-bold text-[#0A1F44] mb-4">Cancel Appointment</h3>
+              <p className="text-gray-600 mb-6">Are you sure you want to cancel this appointment? This action cannot be undone.</p>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowCancelConfirm(false)
+                    setAppointmentToCancel(null)
+                  }}
+                  className="flex-1"
+                >
+                  Keep Appointment
+                </Button>
+                <Button
+                  onClick={confirmCancelAppointment}
+                  className="flex-1 bg-red-500 text-white hover:bg-red-600"
+                >
+                  Cancel Appointment
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </DashboardLayout>
   )
 }

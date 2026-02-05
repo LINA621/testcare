@@ -60,14 +60,7 @@ export default function DoctorDashboard() {
       <div className="space-y-6">
         {/* Activity Overview Section */}
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-[#0A1F44]">Activity Overview</h2>
-            <select className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0066FF] bg-white cursor-pointer">
-              <option>Weekly</option>
-              <option>Monthly</option>
-              <option>Yearly</option>
-            </select>
-          </div>
+          <h2 className="text-xl font-bold text-[#0A1F44] mb-4">Activity Overview</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* New Patients */}
