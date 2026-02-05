@@ -179,43 +179,46 @@ export default function ConsultationDetailPage() {
         {/* Consultation Header */}
         <Card className="border-0 shadow-sm">
           <CardContent className="p-8">
-            <div>
-              <h1 className="text-3xl font-bold text-[#0A1F44] mb-2">{consultation.doctorName}</h1>
-              <p className="text-gray-600">
-                {new Date(consultation.date).toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}{' '}
-                at {consultation.time}
-              </p>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Doctor</p>
+                <h1 className="text-3xl font-bold text-[#0A1F44]">{consultation.doctorName}</h1>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Date</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {new Date(consultation.date).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}{' '}
+                  at {consultation.time}
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Consultation Details Grid */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Motif (Reason for visit) */}
-          <Card className="border-0 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-lg">Motif</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700 p-3 bg-gray-50 rounded-lg leading-relaxed">{consultation.motif}</p>
-            </CardContent>
-          </Card>
+        {/* Motif (Reason for visit) */}
+        <Card className="border-0 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg">Motif</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-700 p-3 bg-gray-50 rounded-lg leading-relaxed">{consultation.motif}</p>
+          </CardContent>
+        </Card>
 
-          {/* Rapport (Report) */}
-          <Card className="border-0 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-lg">Rapport</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700 p-3 bg-gray-50 rounded-lg leading-relaxed">{consultation.rapport}</p>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Rapport (Report) */}
+        <Card className="border-0 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg">Rapport</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-700 p-3 bg-gray-50 rounded-lg leading-relaxed">{consultation.rapport}</p>
+          </CardContent>
+        </Card>
 
         {/* Documents Section */}
         <Card className="border-0 shadow-sm">
