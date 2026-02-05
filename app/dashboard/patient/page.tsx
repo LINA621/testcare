@@ -74,8 +74,8 @@ export default function PatientDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Assigned Doctor</p>
-                  <p className="text-3xl font-bold text-[#0A1F44]">1</p>
+                  <p className="text-sm text-gray-600 mb-1">Total Appointments</p>
+                  <p className="text-3xl font-bold text-[#0A1F44]">5</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center">
                   <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,7 +83,7 @@ export default function PatientDashboard() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                     />
                   </svg>
                 </div>
@@ -92,10 +92,10 @@ export default function PatientDashboard() {
           </Card>
         </div>
 
-        {/* Recent Appointments */}
+        {/* Book an Appointment */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Appointments</CardTitle>
+            <CardTitle>Book an Appointment</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -132,9 +132,9 @@ export default function PatientDashboard() {
               </div>
             ) : (
               <div className="text-center py-8">
-                <p className="text-gray-500 mb-4">No appointments scheduled</p>
+                <p className="text-gray-500 mb-4">No appointments scheduled yet</p>
                 <Link href="/dashboard/patient/doctors">
-                  <Button className="bg-[#0066FF] text-white hover:bg-[#0052CC]">Book Your First Appointment</Button>
+                  <Button className="bg-[#0066FF] text-white hover:bg-[#0052CC]">Book an Appointment</Button>
                 </Link>
               </div>
             )}

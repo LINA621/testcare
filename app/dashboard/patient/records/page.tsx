@@ -5,6 +5,7 @@ import Link from 'next/link'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 interface Consultation {
   id: number
@@ -51,6 +52,7 @@ export default function MedicalRecordsPage() {
     },
   ])
   const [isLoading, setIsLoading] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
 
   // API_ENDPOINT: GET /api/medical-records/consultations
   // Response: Array of consultations from document_medical table
@@ -88,6 +90,15 @@ export default function MedicalRecordsPage() {
           <p className="text-gray-600 text-sm mt-1">View all your consultations and medical documents</p>
         </div>
 
+        {/* Search Bar */}
+        <Input
+          type="text"
+          placeholder="Search consultations by doctor name, diagnosis, or date..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-2xl"
+        />
+
         {/* Consultations List */}
         <Card className="border-0 shadow-sm">
           <CardHeader>
@@ -103,8 +114,24 @@ export default function MedicalRecordsPage() {
                 <p>No consultations available</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {consultations.map((consultation) => (
+              <>
+                {(() => {
+                  const filteredConsultations = consultations.filter((consultation) => {
+                    const searchLower = searchTerm.toLowerCase()
+                    return (
+                      consultation.doctorName.toLowerCase().includes(searchLower) ||
+                      consultation.diagnosis.toLowerCase().includes(searchLower) ||
+                      consultation.date.toLowerCase().includes(searchLower)
+                    )
+                  })
+                  
+                  return filteredConsultations.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>No consultations match your search</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {filteredConsultations.map((consultation) => (
                   <div
                     key={consultation.id}
                     className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition"
@@ -139,9 +166,12 @@ export default function MedicalRecordsPage() {
                         More Info
                       </Button>
                     </Link>
-                  </div>
-                ))}
-              </div>
+                      </div>
+                      ))}
+                    </div>
+                  )
+                })()}
+              </>
             )}
           </CardContent>
         </Card>

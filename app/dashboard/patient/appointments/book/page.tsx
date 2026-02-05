@@ -55,6 +55,8 @@ export default function BookAppointmentPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const doctorId = searchParams.get('doctorId')
+  const rescheduleId = searchParams.get('rescheduleId')
+  const isRescheduling = !!rescheduleId
 
   const [selectedDoctor, setSelectedDoctor] = useState<DoctorInfo | null>(null)
   const [selectedDate, setSelectedDate] = useState('')
@@ -68,7 +70,15 @@ export default function BookAppointmentPage() {
     if (doctorId && doctorsList[doctorId]) {
       setSelectedDoctor(doctorsList[doctorId])
     }
-  }, [doctorId])
+    
+    // Pre-fill data if rescheduling
+    if (isRescheduling) {
+      const prefilledDate = searchParams.get('date')
+      const prefilledTime = searchParams.get('time')
+      if (prefilledDate) setSelectedDate(prefilledDate)
+      if (prefilledTime) setSelectedTime(prefilledTime)
+    }
+  }, [doctorId, isRescheduling, searchParams])
 
   useEffect(() => {
     if (selectedDate) {
@@ -94,13 +104,23 @@ export default function BookAppointmentPage() {
     e.preventDefault()
     setIsSubmitting(true)
 
-    console.log('[v0] Booking appointment:', {
-      doctor: selectedDoctor,
-      date: selectedDate,
-      time: selectedTime,
-      reason: reason,
-      patientInfo: patientData,
-    })
+    if (isRescheduling) {
+      console.log('[v0] Rescheduling appointment:', {
+        appointmentId: rescheduleId,
+        newDate: selectedDate,
+        newTime: selectedTime,
+        // API call: PUT /rendezvous/update/{id}
+      })
+    } else {
+      console.log('[v0] Booking new appointment:', {
+        doctor: selectedDoctor,
+        date: selectedDate,
+        time: selectedTime,
+        reason: reason,
+        patientInfo: patientData,
+        // API call: POST /patient/rendezvous
+      })
+    }
 
     // Simulate API call
     setTimeout(() => {
@@ -147,61 +167,70 @@ export default function BookAppointmentPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-[#0A1F44] mb-2">Appointment Booked Successfully!</h3>
+              <h3 className="text-2xl font-bold text-[#0A1F44] mb-2">
+                {isRescheduling ? 'Appointment Rescheduled Successfully!' : 'Appointment Booked Successfully!'}
+              </h3>
               <p className="text-gray-600">
-                Your appointment with {selectedDoctor.name} on {selectedDate} at {selectedTime} has been confirmed.
+                {isRescheduling 
+                  ? `Your appointment has been rescheduled to ${selectedDate} at ${selectedTime}.`
+                  : `Your appointment with ${selectedDoctor.name} on ${selectedDate} at ${selectedTime} has been confirmed.`
+                }
               </p>
             </CardContent>
           </Card>
         ) : (
           <Card className="border-0 shadow-sm">
             <CardHeader>
-              <CardTitle>Book an Appointment</CardTitle>
+              <CardTitle>{isRescheduling ? 'Reschedule Appointment' : 'Book an Appointment'}</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Selected Doctor (Pre-filled, Read-only) */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Selected Doctor</label>
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-blue-200 flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    </div>
+                {!isRescheduling && (
+                  <>
+                    {/* Selected Doctor (Pre-filled, Read-only) - Only show on new booking */}
                     <div>
-                      <h3 className="font-semibold text-[#0A1F44]">{selectedDoctor.name}</h3>
-                      <p className="text-sm text-[#0066FF]">{selectedDoctor.specialty}</p>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">Selected Doctor</label>
+                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-blue-200 flex items-center justify-center flex-shrink-0">
+                          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-[#0A1F44]">{selectedDoctor.name}</h3>
+                          <p className="text-sm text-[#0066FF]">{selectedDoctor.specialty}</p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
 
-                {/* Patient Information (Pre-filled, Read-only) */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Patient Information</label>
-                  <div className="grid md:grid-cols-2 gap-4">
+                    {/* Patient Information (Pre-filled, Read-only) - Only show on new booking */}
                     <div>
-                      <label className="block text-xs text-gray-600 mb-1">Patient Name</label>
-                      <Input type="text" value={patientData.name} disabled className="bg-gray-100" />
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">Patient Information</label>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">Patient Name</label>
+                          <Input type="text" value={patientData.name} disabled className="bg-gray-100" />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">Patient Number</label>
+                          <Input type="text" value={patientData.number} disabled className="bg-gray-100" />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">Blood Type</label>
+                          <Input type="text" value={patientData.bloodType} disabled className="bg-gray-100" />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">Email</label>
+                          <Input type="email" value={patientData.email} disabled className="bg-gray-100" />
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1">Patient Number</label>
-                      <Input type="text" value={patientData.number} disabled className="bg-gray-100" />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1">Blood Type</label>
-                      <Input type="text" value={patientData.bloodType} disabled className="bg-gray-100" />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1">Email</label>
-                      <Input type="email" value={patientData.email} disabled className="bg-gray-100" />
-                    </div>
-                  </div>
-                </div>
+                  </>
+                )}
 
                 {/* Appointment Details */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Appointment Details</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">{isRescheduling ? 'New Date & Time' : 'Appointment Details'}</label>
 
                   {/* Date */}
                   <div className="mb-4">
@@ -254,36 +283,38 @@ export default function BookAppointmentPage() {
                     )}
                   </div>
 
-                  {/* Reason */}
-                  <div>
-                    <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-2">
-                      Reason for Visit *
-                    </label>
-                    <textarea
-                      id="reason"
-                      value={reason}
-                      onChange={(e) => setReason(e.target.value)}
-                      required
-                      placeholder="Describe the reason for your appointment"
-                      rows={4}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066FF] focus:border-transparent resize-none"
-                    />
-                  </div>
+                  {/* Reason - Only show on new booking */}
+                  {!isRescheduling && (
+                    <div>
+                      <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-2">
+                        Reason for Visit *
+                      </label>
+                      <textarea
+                        id="reason"
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                        required={!isRescheduling}
+                        placeholder="Describe the reason for your appointment"
+                        rows={4}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066FF] focus:border-transparent resize-none"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Action Buttons */}
                 <div className="flex gap-4 pt-6 border-t border-gray-200">
-                  <Link href="/dashboard/patient/doctors" className="flex-1">
+                  <Link href={isRescheduling ? "/dashboard/patient/appointments" : "/dashboard/patient/doctors"} className="flex-1">
                     <Button variant="outline" className="w-full bg-transparent">
                       Cancel
                     </Button>
                   </Link>
                   <Button
                     type="submit"
-                    disabled={isSubmitting || !selectedDate || !selectedTime || !reason}
+                    disabled={isSubmitting || !selectedDate || !selectedTime || (!isRescheduling && !reason)}
                     className="flex-1 bg-[#0066FF] text-white hover:bg-[#0052CC] disabled:bg-gray-300"
                   >
-                    {isSubmitting ? 'Booking...' : 'Confirm Booking'}
+                    {isSubmitting ? (isRescheduling ? 'Rescheduling...' : 'Booking...') : (isRescheduling ? 'Confirm Reschedule' : 'Confirm Booking')}
                   </Button>
                 </div>
               </form>

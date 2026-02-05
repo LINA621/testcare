@@ -122,14 +122,20 @@ export default function PatientAppointments() {
 
   const handleCancelAppointment = (appointmentId: number) => {
     console.log('[v0] Cancelling appointment:', appointmentId)
+    // API call: PUT /patient/rendezvous/annuler/{id}
     setAppointments(appointments.filter((apt) => apt.id !== appointmentId))
-    // API call to delete from database would go here
   }
 
   const handleRescheduleAppointment = (appointment: Appointment) => {
     console.log('[v0] Rescheduling appointment:', appointment)
-    // Navigate to book appointment page with pre-filled data
-    // window.location.href = `/dashboard/patient/appointments/reschedule/${appointment.id}`
+    // Navigate to book appointment page with pre-filled reschedule data
+    const searchParams = new URLSearchParams({
+      doctorId: '1',
+      rescheduleId: appointment.id.toString(),
+      date: appointment.date,
+      time: appointment.time,
+    })
+    window.location.href = `/dashboard/patient/appointments/book?${searchParams.toString()}`
   }
 
   const filteredAppointments = appointments
