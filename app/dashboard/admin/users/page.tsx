@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import DashboardLayout from "@/components/dashboard/DashboardLayout"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -17,6 +17,27 @@ export default function UserManagementPage() {
   const [showModal, setShowModal] = useState(false)
   const [showAssistantModal, setShowAssistantModal] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  
+  // Modal form state
+  const [selectedRole, setSelectedRole] = useState("Doctor")
+  const [fullName, setFullName] = useState("")
+  const [email, setEmail] = useState("")
+  const [licenseNumber, setLicenseNumber] = useState("")
+  const [specialty, setSpecialty] = useState("")
+  const [assignedDoctor, setAssignedDoctor] = useState("")
+  const [password, setPassword] = useState("")
+  
+  // Mock specialties and doctors list (would be fetched from API)
+  const [specialties, setSpecialties] = useState([
+    { id: 1, name: "Cardiology" },
+    { id: 2, name: "Neurology" },
+    { id: 3, name: "General Practice" },
+    { id: 4, name: "Pediatrics" },
+  ])
+  const [doctors, setDoctors] = useState([
+    { id: 1, name: "Dr. John Smith" },
+    { id: 2, name: "Dr. Michael Lee" },
+  ])
   const [users, setUsers] = useState([
     {
       id: 1,
@@ -65,6 +86,55 @@ export default function UserManagementPage() {
         user.id === id ? { ...user, status: user.status === "Active" ? "Inactive" : "Active" } : user
       )
     )
+  }
+
+  const handleModalClose = () => {
+    setShowModal(false)
+    // Reset form
+    setSelectedRole("Doctor")
+    setFullName("")
+    setEmail("")
+    setLicenseNumber("")
+    setSpecialty("")
+    setAssignedDoctor("")
+    setPassword("")
+  }
+
+  const handleCreateUser = () => {
+    // Validation
+    if (!fullName || !email || !password) {
+      alert("Please fill in all required fields")
+      return
+    }
+
+    if (selectedRole === "Doctor" && (!licenseNumber || !specialty)) {
+      alert("Please fill in License Number and Specialty for Doctor")
+      return
+    }
+
+    // API Integration placeholder
+    console.log("[v0] Creating user with data:", {
+      fullName,
+      email,
+      role: selectedRole,
+      licenseNumber: selectedRole === "Doctor" ? licenseNumber : undefined,
+      specialty: selectedRole === "Doctor" ? specialty : undefined,
+      assignedDoctor: selectedRole === "Assistant" ? assignedDoctor : undefined,
+      password,
+    })
+
+    // Add user to list (temporary)
+    const newUser = {
+      id: users.length + 1,
+      name: fullName,
+      email,
+      role: selectedRole,
+      status: "Active",
+      joinDate: new Date().toISOString().split("T")[0],
+    }
+    setUsers([...users, newUser])
+
+    handleModalClose()
   }
 
   const itemsPerPage = 5
@@ -213,41 +283,124 @@ export default function UserManagementPage() {
         {/* Add User Modal */}
         {showModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <Card className="w-full max-w-md m-0">
-              <div className="bg-[#1e3a8a] p-6 flex items-center justify-between">
+            <Card className="w-full max-w-md m-0 max-h-[90vh] overflow-y-auto">
+              <div className="bg-[#1e3a8a] p-6 flex items-center justify-between sticky top-0 z-10">
                 <span className="text-xl font-bold text-white">
                   <span className="text-[#0066FF]">Med</span>
                   <span className="text-white">Care</span>
                 </span>
-                <button onClick={() => setShowModal(false)} className="text-white hover:bg-[#0052CC] p-1 rounded">
+                <button onClick={handleModalClose} className="text-white hover:bg-[#0052CC] p-1 rounded">
                   ✕
                 </button>
               </div>
               <CardContent className="p-6">
                 <h2 className="text-xl font-bold text-[#0A1F44] mb-4">Add New User</h2>
                 <form className="space-y-4">
+                  {/* Common Fields */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                    <Input type="text" placeholder="Enter full name" />
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                    <Input 
+                      type="text" 
+                      placeholder="Enter full name"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                    <Input type="email" placeholder="Enter email address" />
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                    <Input 
+                      type="email" 
+                      placeholder="Enter email address"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0066FF]">
-                      <option>Doctor</option>
-                      <option>Patient</option>
-                      <option>Assistant</option>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Role *</label>
+                    <select 
+                      value={selectedRole}
+                      onChange={(e) => setSelectedRole(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0066FF] focus:border-transparent"
+                    >
+                      <option value="Doctor">Doctor</option>
+                      <option value="Assistant">Assistant</option>
+                      <option value="Admin">Admin</option>
                     </select>
                   </div>
+
+                  {/* Doctor-Specific Fields */}
+                  {selectedRole === "Doctor" && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">License Number *</label>
+                        <Input 
+                          type="text" 
+                          placeholder="Enter license number"
+                          value={licenseNumber}
+                          onChange={(e) => setLicenseNumber(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Specialty *</label>
+                        <select 
+                          value={specialty}
+                          onChange={(e) => setSpecialty(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0066FF] focus:border-transparent"
+                        >
+                          <option value="">Select a specialty</option>
+                          {specialties.map((spec) => (
+                            <option key={spec.id} value={spec.id}>{spec.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Assistant-Specific Fields */}
+                  {selectedRole === "Assistant" && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">License Number</label>
+                        <Input 
+                          type="text" 
+                          placeholder="Enter license number (optional)"
+                          value={licenseNumber}
+                          onChange={(e) => setLicenseNumber(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Assigned Doctor</label>
+                        <select 
+                          value={assignedDoctor}
+                          onChange={(e) => setAssignedDoctor(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0066FF] focus:border-transparent"
+                        >
+                          <option value="">Select a doctor (optional)</option>
+                          {doctors.map((doc) => (
+                            <option key={doc.id} value={doc.id}>{doc.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Password Field */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Password *</label>
+                    <Input 
+                      type="password" 
+                      placeholder="Enter password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  </div>
+
                   <div className="flex gap-3 pt-4">
-                    <Button onClick={() => setShowModal(false)} variant="outline" className="flex-1">
+                    <Button onClick={handleModalClose} variant="outline" className="flex-1">
                       Cancel
                     </Button>
                     <Button
-                      onClick={() => setShowModal(false)}
+                      onClick={handleCreateUser}
                       className="flex-1 bg-[#0066FF] text-white hover:bg-[#0052CC]"
                     >
                       Create User

@@ -96,25 +96,7 @@ export default function StatisticsPage() {
 
 
 
-        {/* Medical Database Overview */}
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold text-[#0A1F44] mb-6">Medical Database Overview</h2>
-            <div className="grid md:grid-cols-4 gap-4">
-              {[
-                { label: "Total Records", value: "50,234" },
-                { label: "Prescriptions", value: "125,672" },
-                { label: "Lab Results", value: "89,456" },
-                { label: "Diagnostics", value: "45,892" },
-              ].map((item, index) => (
-                <div key={index} className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-2">{item.label}</p>
-                  <p className="text-2xl font-bold text-[#0066FF]">{item.value}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+
       </div>
     </DashboardLayout>
   )
