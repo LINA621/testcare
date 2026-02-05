@@ -124,13 +124,14 @@ export default function UserManagementPage() {
     })
 
     // Add doctor to list (temporary)
+    const today = new Date().toISOString().split("T")[0]
     const newDoctor = {
       id: users.length + 1,
       name: `Dr. ${doctorEmail.split("@")[0]}`,
       email: doctorEmail,
       role: "Doctor",
       status: "Active",
-      joinDate: new Date().toISOString().split("T")[0],
+      joinDate: today,
     }
     setUsers([...users, newDoctor])
 
@@ -153,13 +154,14 @@ export default function UserManagementPage() {
     })
 
     // Add secretary to list (temporary)
+    const today = new Date().toISOString().split("T")[0]
     const newSecretary = {
       id: users.length + 1,
       name: `Secretary ${secretaryEmail.split("@")[0]}`,
       email: secretaryEmail,
       role: "Assistant",
       status: "Active",
-      joinDate: new Date().toISOString().split("T")[0],
+      joinDate: today,
     }
     setUsers([...users, newSecretary])
 
