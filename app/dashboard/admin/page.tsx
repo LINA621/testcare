@@ -60,29 +60,6 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-4 gap-4">
-              <Link href="/dashboard/admin/users">
-                <Button className="w-full bg-[#0066FF] text-white hover:bg-[#0052CC]">Manage Users</Button>
-              </Link>
-              <Link href="/dashboard/admin/specialties">
-                <Button className="w-full bg-[#0066FF] text-white hover:bg-[#0052CC]">Manage Specialties</Button>
-              </Link>
-              <Link href="/dashboard/admin/assistants">
-                <Button className="w-full bg-[#0066FF] text-white hover:bg-[#0052CC]">Manage Assistants</Button>
-              </Link>
-              <Link href="/dashboard/admin/statistics">
-                <Button className="w-full bg-[#0066FF] text-white hover:bg-[#0052CC]">View Statistics</Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </DashboardLayout>
   )
