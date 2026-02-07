@@ -15,6 +15,7 @@ interface Patient {
 export default function NewConsultationReport() {
   const router = useRouter()
   const [selectedPatient, setSelectedPatient] = useState<string>('')
+  const [motif, setMotif] = useState('')
   const [consultationNotes, setConsultationNotes] = useState('')
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -66,16 +67,17 @@ export default function NewConsultationReport() {
   }
 
   const handleSave = async () => {
-    if (!selectedPatient || !consultationNotes.trim()) {
-      alert('Please select a patient and add consultation notes')
+    if (!selectedPatient || !motif.trim() || !consultationNotes.trim()) {
+      alert('Please select a patient, add motif, and add consultation details')
       return
     }
 
     setIsLoading(true)
-    // API_ENDPOINT: POST /api/doctor/consultations
+    // API_ENDPOINT: POST /consultation/create
     // Request: {
     //   patient_id: string,
-    //   notes: string,
+    //   motif: string,
+    //   rapport: string,
     //   files: File[]
     // }
     // Response: { consultation_id: string, created_at: string }
@@ -85,7 +87,8 @@ export default function NewConsultationReport() {
       await new Promise((resolve) => setTimeout(resolve, 1000))
       console.log('[v0] Consultation saved:', {
         patientId: selectedPatient,
-        notes: consultationNotes,
+        motif: motif,
+        rapport: consultationNotes,
         filesCount: uploadedFiles.length,
       })
       router.push('/dashboard/doctor/consultations')
@@ -143,6 +146,23 @@ export default function NewConsultationReport() {
                   </p>
                 </div>
               )}
+            </div>
+
+            {/* Motif (Reason for Visit) */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-800 mb-3">
+                Motif <span className="text-red-500">*</span>
+              </label>
+              <p className="text-xs text-gray-600 mb-3">
+                Reason for consultation
+              </p>
+              <textarea
+                value={motif}
+                onChange={(e) => setMotif(e.target.value)}
+                placeholder="Enter reason for consultation..."
+                rows={3}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066FF] resize-none"
+              />
             </div>
 
             {/* Consultation Notes */}
@@ -255,7 +275,7 @@ export default function NewConsultationReport() {
               </Button>
               <Button
                 onClick={handleSave}
-                disabled={isLoading || !selectedPatient || !consultationNotes.trim()}
+                disabled={isLoading || !selectedPatient || !motif.trim() || !consultationNotes.trim()}
                 className="flex-1 bg-[#0066FF] text-white hover:bg-[#0052CC] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? 'Saving...' : 'Save Consultation'}

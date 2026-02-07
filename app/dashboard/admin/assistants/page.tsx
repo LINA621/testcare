@@ -1,57 +1,47 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import DashboardLayout from "@/components/dashboard/DashboardLayout"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
+const API_URL = "http://localhost:8080/api/v1"
+
 export default function AssistantsManagementPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [showModal, setShowModal] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
-  const [assistants, setAssistants] = useState([
-    {
-      id: 1,
-      name: "Emily Davis",
-      email: "emily@medcare.com",
-      assignedDoctor: "Dr. John Smith",
-      status: "Active",
-      joinDate: "2023-08-10",
-    },
-    {
-      id: 2,
-      name: "Jessica Wilson",
-      email: "jessica@medcare.com",
-      assignedDoctor: "Dr. Sarah Johnson",
-      status: "Active",
-      joinDate: "2023-09-15",
-    },
-    {
-      id: 3,
-      name: "Lisa Anderson",
-      email: "lisa@medcare.com",
-      assignedDoctor: "Dr. Michael Lee",
-      status: "Active",
-      joinDate: "2023-07-20",
-    },
-    {
-      id: 4,
-      name: "Sarah Martin",
-      email: "sarah.m@medcare.com",
-      assignedDoctor: "Unassigned",
-      status: "Inactive",
-      joinDate: "2023-06-05",
-    },
-    {
-      id: 5,
-      name: "Jennifer Brown",
-      email: "jennifer@medcare.com",
-      assignedDoctor: "Dr. Emily Davis",
-      status: "Active",
-      joinDate: "2023-10-01",
-    },
-  ])
+  const [assistants, setAssistants] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Fetch assistants from API
+  useEffect(() => {
+    const fetchAssistants = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch(`${API_URL}/secretaire`)
+        if (response.ok) {
+          const data = await response.json()
+          const formattedAssistants = data.map((assistant: any) => ({
+            id: assistant.id,
+            name: `${assistant.utilisateur?.prenom} ${assistant.utilisateur?.nom}`,
+            email: assistant.compte?.email,
+            assignedDoctor: "Unassigned", // This would come from medecin relationship if available
+            status: assistant.compte?.statut || "Active",
+            joinDate: assistant.compte?.currentdate || new Date().toISOString(),
+          }))
+          setAssistants(formattedAssistants)
+        }
+      } catch (error) {
+        console.log("[v0] Error fetching assistants:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchAssistants()
+  }, [])
 
   const filteredAssistants = assistants.filter(
     (assistant) =>

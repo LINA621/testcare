@@ -16,9 +16,6 @@ export default function DoctorProfile() {
     phone: '+212 612345678',
     specialization: 'General Medicine',
     licenseNumber: 'LIC-2024-001',
-    yearsOfExperience: '8',
-    clinic: 'MedCare Hospital',
-    about: 'Experienced general practitioner with 8 years of clinical practice. Dedicated to providing high-quality patient care and continuing medical education.',
   })
 
   // API_ENDPOINT: GET /api/doctor/profile
@@ -118,7 +115,7 @@ export default function DoctorProfile() {
               {/* Professional Information */}
               <div>
                 <h2 className="text-lg font-semibold text-[#0A1F44] mb-6">Professional Information</h2>
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-gray-800 mb-2">Specialization</label>
                     <Input
@@ -130,44 +127,7 @@ export default function DoctorProfile() {
                       className="w-full"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-800 mb-2">Years of Experience</label>
-                    <Input
-                      name="yearsOfExperience"
-                      type="number"
-                      value={formData.yearsOfExperience}
-                      onChange={handleInputChange}
-                      placeholder="e.g., 5"
-                      disabled={!isEditing}
-                      className="w-full"
-                    />
-                  </div>
                 </div>
-                <div className="mt-6">
-                  <label className="block text-sm font-semibold text-gray-800 mb-2">Clinic/Hospital</label>
-                  <Input
-                    name="clinic"
-                    value={formData.clinic}
-                    onChange={handleInputChange}
-                    placeholder="Enter clinic or hospital name"
-                    disabled={!isEditing}
-                    className="w-full"
-                  />
-                </div>
-              </div>
-
-              {/* About */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">About</label>
-                <textarea
-                  name="about"
-                  value={formData.about}
-                  onChange={handleInputChange}
-                  placeholder="Write a brief bio..."
-                  disabled={!isEditing}
-                  rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066FF] disabled:bg-gray-50 disabled:text-gray-600"
-                />
               </div>
 
               {/* Action Buttons */}

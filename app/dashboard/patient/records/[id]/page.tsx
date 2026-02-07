@@ -10,12 +10,10 @@ import { Button } from '@/components/ui/button'
 interface ConsultationDetail {
   id: number
   doctorName: string
-  doctorDescription: string
   date: string
   time: string
-  diagnosis: string
-  notes: string
-  prescription: string
+  motif: string
+  rapport: string
   documents: Array<{
     id: number
     name: string
@@ -30,12 +28,10 @@ const consultationData: { [key: string]: ConsultationDetail } = {
   '1': {
     id: 1,
     doctorName: 'Dr. Michael Lee',
-    doctorDescription: 'Dr. Michael Lee is a skilled general practitioner with over 10 years of experience in diagnosing and treating common illnesses.',
     date: '2024-12-28',
     time: '10:30 AM',
-    diagnosis: 'Seasonal Flu',
-    notes: 'Patient presented with fever, cough, and body aches. After thorough examination and vital sign assessment, confirmed seasonal flu diagnosis. Patient was advised rest, hydration, and prescribed appropriate medications.',
-    prescription: 'Tamiflu 75mg - twice daily for 5 days; Paracetamol 500mg - as needed for fever',
+    motif: 'Seasonal Flu symptoms - fever, cough, and body aches',
+    rapport: 'Patient presented with fever, cough, and body aches. After thorough examination and vital sign assessment, confirmed seasonal flu diagnosis. Patient was advised rest, hydration, and prescribed appropriate medications.',
     documents: [
       {
         id: 1,
@@ -56,12 +52,10 @@ const consultationData: { [key: string]: ConsultationDetail } = {
   '2': {
     id: 2,
     doctorName: 'Dr. Sarah Johnson',
-    doctorDescription: 'Dr. Sarah Johnson is an experienced physician specializing in preventive care and annual health assessments with a patient-focused approach.',
     date: '2024-11-15',
     time: '02:00 PM',
-    diagnosis: 'Annual Checkup',
-    notes: 'Comprehensive annual health examination completed. All vital signs normal, weight stable, BMI in healthy range. Patient is maintaining excellent health with regular exercise and balanced diet.',
-    prescription: 'Continue current diet and exercise routine. Vitamin D supplement recommended during winter months.',
+    motif: 'Annual health checkup',
+    rapport: 'Comprehensive annual health examination completed. All vital signs normal, weight stable, BMI in healthy range. Patient is maintaining excellent health with regular exercise and balanced diet.',
     documents: [
       {
         id: 3,
@@ -82,12 +76,10 @@ const consultationData: { [key: string]: ConsultationDetail } = {
   '3': {
     id: 3,
     doctorName: 'Dr. Ahmad Hassan',
-    doctorDescription: 'Dr. Ahmad Hassan specializes in cardiovascular health management with extensive experience in hypertension treatment and monitoring.',
     date: '2024-10-20',
     time: '09:00 AM',
-    diagnosis: 'Hypertension Follow-up',
-    notes: 'Follow-up consultation for hypertension management. Blood pressure reading: 145/92 mmHg - slightly elevated. Current medication reviewed and adjusted. Patient counseled on dietary modifications and stress reduction.',
-    prescription: 'Lisinopril 10mg - once daily (increased from 5mg); Lifestyle modifications: reduce salt intake, regular exercise 30 minutes daily',
+    motif: 'Hypertension Follow-up',
+    rapport: 'Follow-up consultation for hypertension management. Blood pressure reading: 145/92 mmHg - slightly elevated. Current medication reviewed and adjusted. Patient counseled on dietary modifications and stress reduction.',
     documents: [
       {
         id: 5,
@@ -187,10 +179,14 @@ export default function ConsultationDetailPage() {
         {/* Consultation Header */}
         <Card className="border-0 shadow-sm">
           <CardContent className="p-8">
-            <div className="flex items-start justify-between mb-6">
+            <div className="space-y-4">
               <div>
-                <h1 className="text-3xl font-bold text-[#0A1F44] mb-2">{consultation.doctorName}</h1>
-                <p className="text-gray-600">
+                <p className="text-sm text-gray-600 mb-1">Doctor</p>
+                <h1 className="text-3xl font-bold text-[#0A1F44]">{consultation.doctorName}</h1>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Date</p>
+                <p className="text-lg font-semibold text-gray-900">
                   {new Date(consultation.date).toLocaleDateString('en-US', {
                     weekday: 'long',
                     year: 'numeric',
@@ -200,50 +196,29 @@ export default function ConsultationDetailPage() {
                   at {consultation.time}
                 </p>
               </div>
-              <div className="px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm font-medium text-[#0066FF]">Consultation ID: {consultation.id}</p>
-              </div>
-            </div>
-
-            {/* Doctor Description */}
-            <div className="p-4 bg-gray-50 rounded-lg mb-6">
-              <p className="text-sm text-gray-700">{consultation.doctorDescription}</p>
             </div>
           </CardContent>
         </Card>
 
-        {/* Consultation Details Grid */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Diagnosis & Notes */}
-          <Card className="border-0 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-lg">Diagnosis & Notes</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Diagnosis</label>
-                <p className="text-gray-700 p-3 bg-gray-50 rounded-lg">{consultation.diagnosis}</p>
-              </div>
+        {/* Motif (Reason for visit) */}
+        <Card className="border-0 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg">Motif</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-700 p-3 bg-gray-50 rounded-lg leading-relaxed">{consultation.motif}</p>
+          </CardContent>
+        </Card>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Detailed Notes</label>
-                <p className="text-gray-700 p-3 bg-gray-50 rounded-lg leading-relaxed">{consultation.notes}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Prescription */}
-          <Card className="border-0 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-lg">Prescription & Recommendations</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700 p-3 bg-gray-50 rounded-lg leading-relaxed whitespace-pre-wrap">
-                {consultation.prescription}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Rapport (Report) */}
+        <Card className="border-0 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg">Rapport</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-700 p-3 bg-gray-50 rounded-lg leading-relaxed">{consultation.rapport}</p>
+          </CardContent>
+        </Card>
 
         {/* Documents Section */}
         <Card className="border-0 shadow-sm">
@@ -310,38 +285,7 @@ export default function ConsultationDetailPage() {
           </CardContent>
         </Card>
 
-        {/* Additional Information */}
-        <Card className="border-0 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg">Additional Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-semibold text-gray-600 uppercase">Consultation Date</label>
-                <p className="text-gray-900 font-medium">
-                  {new Date(consultation.date).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </p>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-600 uppercase">Consultation Time</label>
-                <p className="text-gray-900 font-medium">{consultation.time}</p>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-600 uppercase">Doctor</label>
-                <p className="text-gray-900 font-medium">{consultation.doctorName}</p>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-600 uppercase">Document Type</label>
-                <p className="text-gray-900 font-medium">Consultation Report</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+
       </div>
     </DashboardLayout>
   )

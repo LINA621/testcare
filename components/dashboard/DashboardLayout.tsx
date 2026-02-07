@@ -28,7 +28,6 @@ export default function DashboardLayout({ children, userRole, pageTitle }: Dashb
       case "patient":
         return [
           { name: "Dashboard", href: "/dashboard/patient", icon: "dashboard" },
-          { name: "Book Appointment", href: "/dashboard/patient/appointments/book", icon: "calendar" },
           { name: "My Appointments", href: "/dashboard/patient/appointments", icon: "list" },
           { name: "Medical Records", href: "/dashboard/patient/records", icon: "document" },
           { name: "Profile", href: "/dashboard/patient/profile", icon: "user" },

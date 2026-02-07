@@ -179,9 +179,9 @@ export default function DoctorPatients() {
                               </button>
                             </Link>
 
-                            {/* Consultation History Icon */}
+                            {/* Medical Records Icon */}
                             <Link href={`/dashboard/doctor/patients/${patient.id}/consultations`}>
-                              <button className="p-2 hover:bg-gray-200 rounded-lg transition text-gray-700">
+                              <button className="p-2 hover:bg-gray-200 rounded-lg transition text-gray-700" title="View Medical Records">
                                 <svg
                                   className="w-5 h-5"
                                   fill="none"

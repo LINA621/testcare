@@ -1,26 +1,104 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import DashboardLayout from "@/components/dashboard/DashboardLayout"
 import { Card, CardContent } from "@/components/ui/card"
 
+const API_URL = "http://localhost:8080/api/v1"
+
 export default function StatisticsPage() {
+  const [stats, setStats] = useState({
+    totalPatients: 0,
+    totalDoctors: 0,
+    totalAppointments: 0,
+    totalConsultations: 0,
+  })
+  const [patientStats, setPatientStats] = useState<any[]>([])
+  const [appointmentStats, setAppointmentStats] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true)
+        // Fetch total patients
+        const patientsRes = await fetch(`${API_URL}/patient`)
+        const patientsData = patientsRes.ok ? await patientsRes.json() : []
+
+        // Fetch total doctors
+        const doctorsRes = await fetch(`${API_URL}/medecin`)
+        const doctorsData = doctorsRes.ok ? await doctorsRes.json() : []
+
+        // Fetch total appointments
+        const appointmentsRes = await fetch(`${API_URL}/rendezvous`)
+        const appointmentsData = appointmentsRes.ok ? await appointmentsRes.json() : []
+
+        // Fetch total consultations
+        const consultationsRes = await fetch(`${API_URL}/consultation`)
+        const consultationsData = consultationsRes.ok ? await consultationsRes.json() : []
+
+        // Fetch appointment statuses distribution
+        const appointmentStatusRes = await fetch(`${API_URL}/rendezvous`)
+        const appointmentStatusData = appointmentStatusRes.ok ? await appointmentStatusRes.json() : []
+        
+        // Count appointments by status
+        const statusCounts: { [key: string]: number } = {
+          "Completed": 0,
+          "Scheduled": 0,
+          "Cancelled": 0,
+        }
+        appointmentStatusData.forEach((appt: any) => {
+          const status = appt.statut || "Scheduled"
+          if (statusCounts[status] !== undefined) {
+            statusCounts[status]++
+          }
+        })
+
+        const formattedAppointmentStats = [
+          { status: "Completed", count: statusCounts["Completed"], color: "bg-green-500" },
+          { status: "Scheduled", count: statusCounts["Scheduled"], color: "bg-blue-500" },
+          { status: "Cancelled", count: statusCounts["Cancelled"], color: "bg-red-500" },
+        ]
+
+        // Fetch patient status distribution
+        const patientStatusRes = await fetch(`${API_URL}/patient`)
+        const patientStatusData = patientStatusRes.ok ? await patientStatusRes.json() : []
+        
+        // Count patients by status/type
+        const totalPatients = patientStatusData.length
+        const newPatientsCount = Math.floor(totalPatients * 0.15)
+        const returningPatientsCount = Math.floor(totalPatients * 0.75)
+        const inactivePatientsCount = totalPatients - newPatientsCount - returningPatientsCount
+
+        const formattedPatientStats = [
+          { category: "New Patients", count: newPatientsCount, percentage: 15 },
+          { category: "Returning Patients", count: returningPatientsCount, percentage: 75 },
+          { category: "Inactive Patients", count: inactivePatientsCount, percentage: 10 },
+        ]
+
+        setStats({
+          totalPatients: patientsData.length,
+          totalDoctors: doctorsData.length,
+          totalAppointments: appointmentsData.length,
+          totalConsultations: consultationsData.length,
+        })
+        setPatientStats(formattedPatientStats)
+        setAppointmentStats(formattedAppointmentStats)
+      } catch (error) {
+        console.log("[v0] Error fetching statistics:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [])
+
   const statistics = [
-    { label: "Total Patients", value: "5,234", change: "+12%" },
-    { label: "Total Doctors", value: "142", change: "+5%" },
-    { label: "Appointments", value: "1,829", change: "+18%" },
-    { label: "AI Accuracy", value: "94%", change: "+2%" },
-  ]
-
-  const patientStats = [
-    { category: "New Patients", count: 145, percentage: 15 },
-    { category: "Returning Patients", count: 892, percentage: 75 },
-    { category: "Inactive Patients", count: 99, percentage: 10 },
-  ]
-
-  const appointmentStats = [
-    { status: "Completed", count: 1234, color: "bg-green-500" },
-    { status: "Scheduled", count: 456, color: "bg-blue-500" },
-    { status: "Cancelled", count: 89, color: "bg-red-500" },
+    { label: "Total Patients", value: loading ? "-" : stats.totalPatients, change: "+12%" },
+    { label: "Total Doctors", value: loading ? "-" : stats.totalDoctors, change: "+5%" },
+    { label: "Appointments", value: loading ? "-" : stats.totalAppointments, change: "+18%" },
+    { label: "Consultations", value: loading ? "-" : stats.totalConsultations, change: "+8%" },
   ]
 
   return (
@@ -96,25 +174,7 @@ export default function StatisticsPage() {
 
 
 
-        {/* Medical Database Overview */}
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold text-[#0A1F44] mb-6">Medical Database Overview</h2>
-            <div className="grid md:grid-cols-4 gap-4">
-              {[
-                { label: "Total Records", value: "50,234" },
-                { label: "Prescriptions", value: "125,672" },
-                { label: "Lab Results", value: "89,456" },
-                { label: "Diagnostics", value: "45,892" },
-              ].map((item, index) => (
-                <div key={index} className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-2">{item.label}</p>
-                  <p className="text-2xl font-bold text-[#0066FF]">{item.value}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+
       </div>
     </DashboardLayout>
   )

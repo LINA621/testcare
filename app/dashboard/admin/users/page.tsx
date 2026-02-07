@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import DashboardLayout from "@/components/dashboard/DashboardLayout"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -14,43 +14,109 @@ const deleteUser = (id: number) => {
 export default function UserManagementPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterRole, setFilterRole] = useState("")
-  const [showModal, setShowModal] = useState(false)
-  const [showAssistantModal, setShowAssistantModal] = useState(false)
+  const [showDoctorModal, setShowDoctorModal] = useState(false)
+  const [showSecretaryModal, setShowSecretaryModal] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: "Dr. John Smith",
-      email: "john@medcare.com",
-      role: "Doctor",
-      status: "Active",
-      joinDate: "2023-03-15",
-    },
-    {
-      id: 2,
-      name: "Sarah Johnson",
-      email: "sarah@medcare.com",
-      role: "Patient",
-      status: "Active",
-      joinDate: "2023-06-20",
-    },
-    {
-      id: 3,
-      name: "Emily Davis",
-      email: "emily@medcare.com",
-      role: "Assistant",
-      status: "Active",
-      joinDate: "2023-08-10",
-    },
-    {
-      id: 4,
-      name: "Michael Lee",
-      email: "michael@medcare.com",
-      role: "Doctor",
-      status: "Inactive",
-      joinDate: "2023-01-05",
-    },
-  ])
+  
+  // Doctor form state (Utilisateur + Medecin + Compte)
+  const [doctorNom, setDoctorNom] = useState("")
+  const [doctorPrenom, setDoctorPrenom] = useState("")
+  const [doctorDateNaissance, setDoctorDateNaissance] = useState("")
+  const [doctorSexe, setDoctorSexe] = useState("")
+  const [doctorTelephone, setDoctorTelephone] = useState("")
+  const [doctorAdresse, setDoctorAdresse] = useState("")
+  const [doctorCin, setDoctorCin] = useState("")
+  const [doctorEmail, setDoctorEmail] = useState("")
+  const [doctorPassword, setDoctorPassword] = useState("")
+  const [doctorStatut, setDoctorStatut] = useState("Active")
+  const [numeroLicence, setNumeroLicence] = useState("")
+  const [specialiteId, setSpecialiteId] = useState("")
+  
+  // Secretary form state (Utilisateur + Secretaire + Compte)
+  const [secretaryNom, setSecretaryNom] = useState("")
+  const [secretaryPrenom, setSecretaryPrenom] = useState("")
+  const [secretaryDateNaissance, setSecretaryDateNaissance] = useState("")
+  const [secretarySexe, setSecretarySexe] = useState("")
+  const [secretaryTelephone, setSecretaryTelephone] = useState("")
+  const [secretaryAdresse, setSecretaryAdresse] = useState("")
+  const [secretaryCin, setSecretaryCin] = useState("")
+  const [secretaryEmail, setSecretaryEmail] = useState("")
+  const [secretaryPassword, setSecretaryPassword] = useState("")
+  const [secretaryStatut, setSecretaryStatut] = useState("Active")
+  
+  const [specialties, setSpecialties] = useState<any[]>([])
+  const [doctors, setDoctors] = useState<any[]>([])
+  const [users, setUsers] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const API_URL = "http://localhost:8080/api/v1"
+
+  // Fetch all users data on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        
+        // Fetch specialties
+        const specialtiesRes = await fetch(`${API_URL}/specialite`)
+        if (specialtiesRes.ok) {
+          setSpecialties(await specialtiesRes.json())
+        }
+        
+        // Fetch doctors
+        const doctorsRes = await fetch(`${API_URL}/medecin`)
+        if (doctorsRes.ok) {
+          const doctorsData = await doctorsRes.json()
+          setDoctors(doctorsData)
+        }
+        
+        // Fetch all users (patients, doctors, secretaries)
+        const patientsRes = await fetch(`${API_URL}/patient`)
+        const doctorsFullRes = await fetch(`${API_URL}/medecin`)
+        const secretariesRes = await fetch(`${API_URL}/secretaire`)
+        
+        const patientsData = patientsRes.ok ? await patientsRes.json() : []
+        const doctorsFullData = doctorsFullRes.ok ? await doctorsFullRes.json() : []
+        const secretariesData = secretariesRes.ok ? await secretariesRes.json() : []
+
+        // Combine all users with role mapping
+        const allUsers = [
+          ...patientsData.map((p: any) => ({
+            id: p.id,
+            name: `${p.utilisateur?.prenom} ${p.utilisateur?.nom}`,
+            email: p.compte?.email,
+            role: "Patient",
+            status: p.compte?.statut || "Active",
+            joinDate: p.compte?.currentdate,
+          })),
+          ...doctorsFullData.map((d: any) => ({
+            id: d.id,
+            name: `Dr. ${d.utilisateur?.prenom} ${d.utilisateur?.nom}`,
+            email: d.compte?.email,
+            role: "Doctor",
+            status: d.compte?.statut || "Active",
+            joinDate: d.compte?.currentdate,
+          })),
+          ...secretariesData.map((s: any) => ({
+            id: s.id,
+            name: `${s.utilisateur?.prenom} ${s.utilisateur?.nom}`,
+            email: s.compte?.email,
+            role: "Assistant",
+            status: s.compte?.statut || "Active",
+            joinDate: s.compte?.currentdate,
+          })),
+        ]
+        
+        setUsers(allUsers)
+      } catch (error) {
+        console.log("[v0] Error fetching users:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   const filteredUsers = users.filter(
     (user) =>
@@ -67,6 +133,150 @@ export default function UserManagementPage() {
     )
   }
 
+  const handleDoctorModalClose = () => {
+    setShowDoctorModal(false)
+    // Reset doctor form
+    setDoctorNom("")
+    setDoctorPrenom("")
+    setDoctorDateNaissance("")
+    setDoctorSexe("")
+    setDoctorTelephone("")
+    setDoctorAdresse("")
+    setDoctorCin("")
+    setDoctorEmail("")
+    setDoctorPassword("")
+    setDoctorStatut("Active")
+    setNumeroLicence("")
+    setSpecialiteId("")
+  }
+
+  const handleSecretaryModalClose = () => {
+    setShowSecretaryModal(false)
+    // Reset secretary form
+    setSecretaryNom("")
+    setSecretaryPrenom("")
+    setSecretaryDateNaissance("")
+    setSecretarySexe("")
+    setSecretaryTelephone("")
+    setSecretaryAdresse("")
+    setSecretaryCin("")
+    setSecretaryEmail("")
+    setSecretaryPassword("")
+    setSecretaryStatut("Active")
+  }
+
+  const handleCreateDoctor = async () => {
+    // Validation
+    if (!doctorNom || !doctorPrenom || !doctorEmail || !doctorPassword || !numeroLicence || !specialiteId) {
+      alert("Please fill in all required fields")
+      return
+    }
+
+    try {
+      // API call: POST /medecin/create
+      const response = await fetch(`${API_URL}/medecin/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          utilisateur: {
+            nom: doctorNom,
+            prenom: doctorPrenom,
+            date_naissance: doctorDateNaissance || null,
+            sexe: doctorSexe || null,
+            telephone: doctorTelephone || null,
+            adresse: doctorAdresse || null,
+            cin: doctorCin || null,
+          },
+          compte: {
+            email: doctorEmail,
+            mot_de_passe: doctorPassword,
+            role: "medecin",
+            statut: doctorStatut,
+          },
+          medecin: {
+            numero_licence: numeroLicence,
+            specialite_id: parseInt(specialiteId),
+          },
+        }),
+      })
+
+      if (response.ok) {
+        const newDoctor = await response.json()
+        console.log("[v0] Doctor created successfully:", newDoctor)
+        
+        // Refresh users list
+        const refreshRes = await fetch(`${API_URL}/medecin`)
+        if (refreshRes.ok) {
+          const refreshedDoctors = await refreshRes.json()
+          setDoctors(refreshedDoctors)
+        }
+        
+        handleDoctorModalClose()
+        // Re-fetch all users
+        window.location.reload()
+      } else {
+        alert("Failed to create doctor")
+      }
+    } catch (error) {
+      console.log("[v0] Error creating doctor:", error)
+      alert("Error creating doctor")
+    }
+  }
+
+  const handleCreateSecretary = async () => {
+    // Validation
+    if (!secretaryNom || !secretaryPrenom || !secretaryEmail || !secretaryPassword) {
+      alert("Please fill in all required fields")
+      return
+    }
+
+    try {
+      // API call: POST /secretaire/create
+      const response = await fetch(`${API_URL}/secretaire/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          utilisateur: {
+            nom: secretaryNom,
+            prenom: secretaryPrenom,
+            date_naissance: secretaryDateNaissance || null,
+            sexe: secretarySexe || null,
+            telephone: secretaryTelephone || null,
+            adresse: secretaryAdresse || null,
+            cin: secretaryCin || null,
+          },
+          compte: {
+            email: secretaryEmail,
+            mot_de_passe: secretaryPassword,
+            role: "secretaire",
+            statut: secretaryStatut,
+          },
+        }),
+      })
+
+      if (response.ok) {
+        const newSecretary = await response.json()
+        console.log("[v0] Secretary created successfully:", newSecretary)
+        
+        // Refresh secretaries list
+        const refreshRes = await fetch(`${API_URL}/secretaire`)
+        if (refreshRes.ok) {
+          const refreshedSecretaries = await refreshRes.json()
+          // Update users state with new secretary
+        }
+        
+        handleSecretaryModalClose()
+        // Re-fetch all users
+        window.location.reload()
+      } else {
+        alert("Failed to create secretary")
+      }
+    } catch (error) {
+      console.log("[v0] Error creating secretary:", error)
+      alert("Error creating secretary")
+    }
+  }
+
   const itemsPerPage = 5
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
@@ -77,9 +287,14 @@ export default function UserManagementPage() {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-[#0A1F44]">Users Management</h1>
-          <Button onClick={() => setShowModal(true)} className="bg-[#0066FF] text-white hover:bg-[#0052CC]">
-            + Add New User
-          </Button>
+          <div className="flex gap-3">
+            <Button onClick={() => setShowDoctorModal(true)} className="bg-[#0066FF] text-white hover:bg-[#0052CC]">
+              + Add Doctor
+            </Button>
+            <Button onClick={() => setShowSecretaryModal(true)} className="bg-[#0066FF] text-white hover:bg-[#0052CC]">
+              + Add Secretary
+            </Button>
+          </div>
         </div>
 
         {/* Search and Filter Bar */}
@@ -210,47 +425,166 @@ export default function UserManagementPage() {
           </button>
         </div>
 
-        {/* Add User Modal */}
-        {showModal && (
+        {/* Add Doctor Modal */}
+        {showDoctorModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <Card className="w-full max-w-md m-0">
-              <div className="bg-[#1e3a8a] p-6 flex items-center justify-between">
+            <Card className="w-full max-w-md m-0 max-h-[90vh] overflow-y-auto">
+              <div className="bg-[#1e3a8a] p-6 flex items-center justify-between sticky top-0 z-10">
                 <span className="text-xl font-bold text-white">
                   <span className="text-[#0066FF]">Med</span>
                   <span className="text-white">Care</span>
                 </span>
-                <button onClick={() => setShowModal(false)} className="text-white hover:bg-[#0052CC] p-1 rounded">
+                <button onClick={handleDoctorModalClose} className="text-white hover:bg-[#0052CC] p-1 rounded">
                   ✕
                 </button>
               </div>
               <CardContent className="p-6">
-                <h2 className="text-xl font-bold text-[#0A1F44] mb-4">Add New User</h2>
-                <form className="space-y-4">
+                <h2 className="text-xl font-bold text-[#0A1F44] mb-4">Add New Doctor</h2>
+                <form className="space-y-4 max-h-[70vh] overflow-y-auto">
+                  {/* Personal Information */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                    <Input type="text" placeholder="Enter full name" />
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Personal Information</h3>
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">First Name *</label>
+                          <Input 
+                            placeholder="Prenom"
+                            value={doctorPrenom}
+                            onChange={(e) => setDoctorPrenom(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Last Name *</label>
+                          <Input 
+                            placeholder="Nom"
+                            value={doctorNom}
+                            onChange={(e) => setDoctorNom(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Date of Birth</label>
+                          <Input 
+                            type="date"
+                            value={doctorDateNaissance}
+                            onChange={(e) => setDoctorDateNaissance(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Gender</label>
+                          <select 
+                            value={doctorSexe}
+                            onChange={(e) => setDoctorSexe(e.target.value)}
+                            className="w-full px-2 py-2 border border-gray-300 rounded text-sm"
+                          >
+                            <option value="">Select</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
+                        <Input 
+                          placeholder="Telephone"
+                          value={doctorTelephone}
+                          onChange={(e) => setDoctorTelephone(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Address</label>
+                        <Input 
+                          placeholder="Adresse"
+                          value={doctorAdresse}
+                          onChange={(e) => setDoctorAdresse(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">ID/CIN</label>
+                        <Input 
+                          placeholder="CIN"
+                          value={doctorCin}
+                          onChange={(e) => setDoctorCin(e.target.value)}
+                        />
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Professional Information */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                    <Input type="email" placeholder="Enter email address" />
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Professional Information</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">License Number *</label>
+                        <Input 
+                          placeholder="Numero Licence"
+                          value={numeroLicence}
+                          onChange={(e) => setNumeroLicence(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Specialty *</label>
+                        <select 
+                          value={specialiteId}
+                          onChange={(e) => setSpecialiteId(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0066FF]"
+                        >
+                          <option value="">Select a specialty</option>
+                          {specialties.map((spec) => (
+                            <option key={spec.id} value={spec.id}>{spec.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Account Information */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0066FF]">
-                      <option>Doctor</option>
-                      <option>Patient</option>
-                      <option>Assistant</option>
-                    </select>
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Account Information</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Email *</label>
+                        <Input 
+                          type="email" 
+                          placeholder="Email address"
+                          value={doctorEmail}
+                          onChange={(e) => setDoctorEmail(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Password *</label>
+                        <Input 
+                          type="password" 
+                          placeholder="Password"
+                          value={doctorPassword}
+                          onChange={(e) => setDoctorPassword(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
+                        <select 
+                          value={doctorStatut}
+                          onChange={(e) => setDoctorStatut(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        >
+                          <option value="Active">Active</option>
+                          <option value="Inactive">Inactive</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex gap-3 pt-4">
-                    <Button onClick={() => setShowModal(false)} variant="outline" className="flex-1">
+
+                  <div className="flex gap-3 pt-4 border-t border-gray-200">
+                    <Button onClick={handleDoctorModalClose} variant="outline" className="flex-1">
                       Cancel
                     </Button>
                     <Button
-                      onClick={() => setShowModal(false)}
+                      onClick={handleCreateDoctor}
                       className="flex-1 bg-[#0066FF] text-white hover:bg-[#0052CC]"
                     >
-                      Create User
+                      Create Doctor
                     </Button>
                   </div>
                 </form>
@@ -259,7 +593,145 @@ export default function UserManagementPage() {
           </div>
         )}
 
+        {/* Add Secretary Modal */}
+        {showSecretaryModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-md m-0 max-h-[90vh] overflow-y-auto">
+              <div className="bg-[#1e3a8a] p-6 flex items-center justify-between sticky top-0 z-10">
+                <span className="text-xl font-bold text-white">
+                  <span className="text-[#0066FF]">Med</span>
+                  <span className="text-white">Care</span>
+                </span>
+                <button onClick={handleSecretaryModalClose} className="text-white hover:bg-[#0052CC] p-1 rounded">
+                  ✕
+                </button>
+              </div>
+              <CardContent className="p-6">
+                <h2 className="text-xl font-bold text-[#0A1F44] mb-4">Add New Secretary</h2>
+                <form className="space-y-4 max-h-[70vh] overflow-y-auto">
+                  {/* Personal Information */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Personal Information</h3>
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">First Name *</label>
+                          <Input 
+                            placeholder="Prenom"
+                            value={secretaryPrenom}
+                            onChange={(e) => setSecretaryPrenom(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Last Name *</label>
+                          <Input 
+                            placeholder="Nom"
+                            value={secretaryNom}
+                            onChange={(e) => setSecretaryNom(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Date of Birth</label>
+                          <Input 
+                            type="date"
+                            value={secretaryDateNaissance}
+                            onChange={(e) => setSecretaryDateNaissance(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Gender</label>
+                          <select 
+                            value={secretarySexe}
+                            onChange={(e) => setSecretarySexe(e.target.value)}
+                            className="w-full px-2 py-2 border border-gray-300 rounded text-sm"
+                          >
+                            <option value="">Select</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
+                        <Input 
+                          placeholder="Telephone"
+                          value={secretaryTelephone}
+                          onChange={(e) => setSecretaryTelephone(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Address</label>
+                        <Input 
+                          placeholder="Adresse"
+                          value={secretaryAdresse}
+                          onChange={(e) => setSecretaryAdresse(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">ID/CIN</label>
+                        <Input 
+                          placeholder="CIN"
+                          value={secretaryCin}
+                          onChange={(e) => setSecretaryCin(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
 
+                  {/* Account Information */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Account Information</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Email *</label>
+                        <Input 
+                          type="email" 
+                          placeholder="Email address"
+                          value={secretaryEmail}
+                          onChange={(e) => setSecretaryEmail(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Password *</label>
+                        <Input 
+                          type="password" 
+                          placeholder="Password"
+                          value={secretaryPassword}
+                          onChange={(e) => setSecretaryPassword(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
+                        <select 
+                          value={secretaryStatut}
+                          onChange={(e) => setSecretaryStatut(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        >
+                          <option value="Active">Active</option>
+                          <option value="Inactive">Inactive</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-4 border-t border-gray-200">
+                    <Button onClick={handleSecretaryModalClose} variant="outline" className="flex-1">
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleCreateSecretary}
+                      className="flex-1 bg-[#0066FF] text-white hover:bg-[#0052CC]"
+                    >
+                      Create Secretary
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   )

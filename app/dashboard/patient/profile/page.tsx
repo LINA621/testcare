@@ -180,27 +180,55 @@ export default function PatientProfile() {
             {/* Allergies */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Allergies</label>
-              <textarea
-                name="allergies"
-                value={formData.allergies}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-                rows={2}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066FF] disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
-              />
+              {isEditing ? (
+                <textarea
+                  name="allergies"
+                  value={formData.allergies}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066FF] resize-none"
+                  placeholder="Enter allergies, one per line"
+                />
+              ) : (
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  {formData.allergies ? (
+                    <div className="space-y-1 text-gray-700">
+                      {formData.allergies.split(',').map((allergy, index) => (
+                        <div key={index}>{allergy.trim()}</div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No allergies recorded</p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Chronic Diseases */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Chronic Diseases</label>
-              <textarea
-                name="chronicDiseases"
-                value={formData.chronicDiseases}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-                rows={2}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066FF] disabled:bg-gray-100 disabled:cursor-not-allowed resize-none"
-              />
+              {isEditing ? (
+                <textarea
+                  name="chronicDiseases"
+                  value={formData.chronicDiseases}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066FF] resize-none"
+                  placeholder="Enter diseases, one per line"
+                />
+              ) : (
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  {formData.chronicDiseases ? (
+                    <div className="space-y-1 text-gray-700">
+                      {formData.chronicDiseases.split(',').map((disease, index) => (
+                        <div key={index}>{disease.trim()}</div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No chronic diseases recorded</p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Save Button */}
