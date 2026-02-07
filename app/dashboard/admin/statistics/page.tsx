@@ -1,14 +1,61 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import DashboardLayout from "@/components/dashboard/DashboardLayout"
 import { Card, CardContent } from "@/components/ui/card"
 
+const API_URL = "http://localhost:8080/api/v1"
+
 export default function StatisticsPage() {
+  const [stats, setStats] = useState({
+    totalPatients: 0,
+    totalDoctors: 0,
+    totalAppointments: 0,
+    totalConsultations: 0,
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true)
+        // Fetch total patients
+        const patientsRes = await fetch(`${API_URL}/patient`)
+        const patientsData = patientsRes.ok ? await patientsRes.json() : []
+
+        // Fetch total doctors
+        const doctorsRes = await fetch(`${API_URL}/medecin`)
+        const doctorsData = doctorsRes.ok ? await doctorsRes.json() : []
+
+        // Fetch total appointments
+        const appointmentsRes = await fetch(`${API_URL}/rendezvous`)
+        const appointmentsData = appointmentsRes.ok ? await appointmentsRes.json() : []
+
+        // Fetch total consultations
+        const consultationsRes = await fetch(`${API_URL}/consultation`)
+        const consultationsData = consultationsRes.ok ? await consultationsRes.json() : []
+
+        setStats({
+          totalPatients: patientsData.length,
+          totalDoctors: doctorsData.length,
+          totalAppointments: appointmentsData.length,
+          totalConsultations: consultationsData.length,
+        })
+      } catch (error) {
+        console.log("[v0] Error fetching statistics:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [])
+
   const statistics = [
-    { label: "Total Patients", value: "5,234", change: "+12%" },
-    { label: "Total Doctors", value: "142", change: "+5%" },
-    { label: "Appointments", value: "1,829", change: "+18%" },
-    { label: "AI Accuracy", value: "94%", change: "+2%" },
+    { label: "Total Patients", value: loading ? "-" : stats.totalPatients, change: "+12%" },
+    { label: "Total Doctors", value: loading ? "-" : stats.totalDoctors, change: "+5%" },
+    { label: "Appointments", value: loading ? "-" : stats.totalAppointments, change: "+18%" },
+    { label: "Consultations", value: loading ? "-" : stats.totalConsultations, change: "+8%" },
   ]
 
   const patientStats = [

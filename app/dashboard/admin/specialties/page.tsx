@@ -1,29 +1,98 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import DashboardLayout from "@/components/dashboard/DashboardLayout"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
+const API_URL = "http://localhost:8080/api/v1"
+
 export default function SpecialtiesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [showModal, setShowModal] = useState(false)
-  const [specialties, setSpecialties] = useState([
-    { id: 1, name: "Cardiology", description: "Heart and cardiovascular system", doctorCount: 8 },
-    { id: 2, name: "Neurology", description: "Nervous system disorders", doctorCount: 5 },
-    { id: 3, name: "Orthopedics", description: "Bones and joints", doctorCount: 6 },
-    { id: 4, name: "Pediatrics", description: "Children's healthcare", doctorCount: 7 },
-  ])
+  const [specialties, setSpecialties] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [newSpecialtyName, setNewSpecialtyName] = useState("")
+  const [newSpecialtyDesc, setNewSpecialtyDesc] = useState("")
+
+  // Fetch specialties from API
+  useEffect(() => {
+    const fetchSpecialties = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch(`${API_URL}/specialite`)
+        if (response.ok) {
+          const data = await response.json()
+          const formattedSpecialties = data.map((spec: any) => ({
+            id: spec.id,
+            nom: spec.nom,
+            description: spec.description,
+            doctorCount: 0, // Would be calculated from doctors with this specialty
+          }))
+          setSpecialties(formattedSpecialties)
+        }
+      } catch (error) {
+        console.log("[v0] Error fetching specialties:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchSpecialties()
+  }, [])
 
   const filteredSpecialties = specialties.filter(
     (s) =>
-      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.description.toLowerCase().includes(searchTerm.toLowerCase()),
+      s.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.description && s.description.toLowerCase().includes(searchTerm.toLowerCase())),
   )
 
-  const handleDelete = (id: number) => {
-    setSpecialties(specialties.filter((s) => s.id !== id))
+  const handleDelete = async (id: number) => {
+    try {
+      const response = await fetch(`${API_URL}/specialite/${id}`, {
+        method: "DELETE",
+      })
+      if (response.ok) {
+        setSpecialties(specialties.filter((s) => s.id !== id))
+      }
+    } catch (error) {
+      console.log("[v0] Error deleting specialty:", error)
+    }
+  }
+
+  const handleAddSpecialty = async () => {
+    if (!newSpecialtyName.trim()) {
+      alert("Please enter a specialty name")
+      return
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/specialite/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nom: newSpecialtyName,
+          description: newSpecialtyDesc || null,
+        }),
+      })
+
+      if (response.ok) {
+        const newSpecialty = await response.json()
+        setSpecialties([...specialties, {
+          id: newSpecialty.id,
+          nom: newSpecialty.nom,
+          description: newSpecialty.description,
+          doctorCount: 0,
+        }])
+        setNewSpecialtyName("")
+        setNewSpecialtyDesc("")
+        setShowModal(false)
+      }
+    } catch (error) {
+      console.log("[v0] Error adding specialty:", error)
+      alert("Failed to add specialty")
+    }
   }
 
   return (
@@ -78,25 +147,39 @@ export default function SpecialtiesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredSpecialties.map((specialty) => (
-                    <tr key={specialty.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
-                      <td className="py-4 px-6 text-gray-700 font-medium">{specialty.name}</td>
-                      <td className="py-4 px-6 text-gray-600 text-sm">{specialty.description}</td>
-                      <td className="py-4 px-6">
-                        <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-[#0066FF]">
-                          {specialty.doctorCount} Doctors
-                        </span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <button
-                          onClick={() => handleDelete(specialty.id)}
-                          className="w-8 h-8 rounded-full bg-red-50 hover:bg-red-100 text-red-600 flex items-center justify-center transition"
-                        >
-                          ✕
-                        </button>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={4} className="py-12 text-center text-gray-500">
+                        Loading specialties...
                       </td>
                     </tr>
-                  ))}
+                  ) : filteredSpecialties.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="py-12 text-center text-gray-500">
+                        No specialties found
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredSpecialties.map((specialty) => (
+                      <tr key={specialty.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
+                        <td className="py-4 px-6 text-gray-700 font-medium">{specialty.nom}</td>
+                        <td className="py-4 px-6 text-gray-600 text-sm">{specialty.description || "-"}</td>
+                        <td className="py-4 px-6">
+                          <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-[#0066FF]">
+                            {specialty.doctorCount} Doctors
+                          </span>
+                        </td>
+                        <td className="py-4 px-6">
+                          <button
+                            onClick={() => handleDelete(specialty.id)}
+                            className="w-8 h-8 rounded-full bg-red-50 hover:bg-red-100 text-red-600 flex items-center justify-center transition"
+                          >
+                            ✕
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -120,13 +203,20 @@ export default function SpecialtiesPage() {
                 <h2 className="text-xl font-bold text-[#0A1F44] mb-4">Add Specialty</h2>
                 <form className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Specialty Name</label>
-                    <Input type="text" placeholder="e.g., Cardiology" />
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Specialty Name *</label>
+                    <Input 
+                      type="text" 
+                      placeholder="e.g., Cardiology"
+                      value={newSpecialtyName}
+                      onChange={(e) => setNewSpecialtyName(e.target.value)}
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                     <textarea
                       placeholder="Describe this specialty..."
+                      value={newSpecialtyDesc}
+                      onChange={(e) => setNewSpecialtyDesc(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0066FF] focus:border-transparent"
                       rows={3}
                     />
@@ -136,7 +226,7 @@ export default function SpecialtiesPage() {
                       Cancel
                     </Button>
                     <Button
-                      onClick={() => setShowModal(false)}
+                      onClick={handleAddSpecialty}
                       className="flex-1 bg-[#0066FF] text-white hover:bg-[#0052CC]"
                     >
                       Add Specialty

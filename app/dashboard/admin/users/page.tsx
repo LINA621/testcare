@@ -44,51 +44,79 @@ export default function UserManagementPage() {
   const [secretaryPassword, setSecretaryPassword] = useState("")
   const [secretaryStatut, setSecretaryStatut] = useState("Active")
   
-  // Mock specialties and doctors list (would be fetched from API)
-  const [specialties, setSpecialties] = useState([
-    { id: 1, name: "Cardiology" },
-    { id: 2, name: "Neurology" },
-    { id: 3, name: "General Practice" },
-    { id: 4, name: "Pediatrics" },
-  ])
-  const [doctors, setDoctors] = useState([
-    { id: 1, name: "Dr. John Smith" },
-    { id: 2, name: "Dr. Michael Lee" },
-  ])
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: "Dr. John Smith",
-      email: "john@medcare.com",
-      role: "Doctor",
-      status: "Active",
-      joinDate: "2023-03-15",
-    },
-    {
-      id: 2,
-      name: "Sarah Johnson",
-      email: "sarah@medcare.com",
-      role: "Patient",
-      status: "Active",
-      joinDate: "2023-06-20",
-    },
-    {
-      id: 3,
-      name: "Emily Davis",
-      email: "emily@medcare.com",
-      role: "Assistant",
-      status: "Active",
-      joinDate: "2023-08-10",
-    },
-    {
-      id: 4,
-      name: "Michael Lee",
-      email: "michael@medcare.com",
-      role: "Doctor",
-      status: "Inactive",
-      joinDate: "2023-01-05",
-    },
-  ])
+  const [specialties, setSpecialties] = useState<any[]>([])
+  const [doctors, setDoctors] = useState<any[]>([])
+  const [users, setUsers] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const API_URL = "http://localhost:8080/api/v1"
+
+  // Fetch all users data on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        
+        // Fetch specialties
+        const specialtiesRes = await fetch(`${API_URL}/specialite`)
+        if (specialtiesRes.ok) {
+          setSpecialties(await specialtiesRes.json())
+        }
+        
+        // Fetch doctors
+        const doctorsRes = await fetch(`${API_URL}/medecin`)
+        if (doctorsRes.ok) {
+          const doctorsData = await doctorsRes.json()
+          setDoctors(doctorsData)
+        }
+        
+        // Fetch all users (patients, doctors, secretaries)
+        const patientsRes = await fetch(`${API_URL}/patient`)
+        const doctorsFullRes = await fetch(`${API_URL}/medecin`)
+        const secretariesRes = await fetch(`${API_URL}/secretaire`)
+        
+        const patientsData = patientsRes.ok ? await patientsRes.json() : []
+        const doctorsFullData = doctorsFullRes.ok ? await doctorsFullRes.json() : []
+        const secretariesData = secretariesRes.ok ? await secretariesRes.json() : []
+
+        // Combine all users with role mapping
+        const allUsers = [
+          ...patientsData.map((p: any) => ({
+            id: p.id,
+            name: `${p.utilisateur?.prenom} ${p.utilisateur?.nom}`,
+            email: p.compte?.email,
+            role: "Patient",
+            status: p.compte?.statut || "Active",
+            joinDate: p.compte?.currentdate,
+          })),
+          ...doctorsFullData.map((d: any) => ({
+            id: d.id,
+            name: `Dr. ${d.utilisateur?.prenom} ${d.utilisateur?.nom}`,
+            email: d.compte?.email,
+            role: "Doctor",
+            status: d.compte?.statut || "Active",
+            joinDate: d.compte?.currentdate,
+          })),
+          ...secretariesData.map((s: any) => ({
+            id: s.id,
+            name: `${s.utilisateur?.prenom} ${s.utilisateur?.nom}`,
+            email: s.compte?.email,
+            role: "Assistant",
+            status: s.compte?.statut || "Active",
+            joinDate: s.compte?.currentdate,
+          })),
+        ]
+        
+        setUsers(allUsers)
+      } catch (error) {
+        console.log("[v0] Error fetching users:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   const filteredUsers = users.filter(
     (user) =>
@@ -137,90 +165,116 @@ export default function UserManagementPage() {
     setSecretaryStatut("Active")
   }
 
-  const handleCreateDoctor = () => {
+  const handleCreateDoctor = async () => {
     // Validation
     if (!doctorNom || !doctorPrenom || !doctorEmail || !doctorPassword || !numeroLicence || !specialiteId) {
       alert("Please fill in all required fields")
       return
     }
 
-    // API Integration: POST /medecin/create
-    console.log("[v0] Creating doctor with data:", {
-      utilisateur: {
-        nom: doctorNom,
-        prenom: doctorPrenom,
-        date_naissance: doctorDateNaissance,
-        sexe: doctorSexe,
-        telephone: doctorTelephone,
-        adresse: doctorAdresse,
-        cin: doctorCin,
-      },
-      compte: {
-        email: doctorEmail,
-        mot_de_passe: doctorPassword,
-        role: "medecin",
-        statut: doctorStatut,
-      },
-      medecin: {
-        numero_licence: numeroLicence,
-        specialite_id: specialiteId,
-      },
-    })
+    try {
+      // API call: POST /medecin/create
+      const response = await fetch(`${API_URL}/medecin/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          utilisateur: {
+            nom: doctorNom,
+            prenom: doctorPrenom,
+            date_naissance: doctorDateNaissance || null,
+            sexe: doctorSexe || null,
+            telephone: doctorTelephone || null,
+            adresse: doctorAdresse || null,
+            cin: doctorCin || null,
+          },
+          compte: {
+            email: doctorEmail,
+            mot_de_passe: doctorPassword,
+            role: "medecin",
+            statut: doctorStatut,
+          },
+          medecin: {
+            numero_licence: numeroLicence,
+            specialite_id: parseInt(specialiteId),
+          },
+        }),
+      })
 
-    // Add doctor to list (temporary)
-    const today = new Date().toISOString().split("T")[0]
-    const newDoctor = {
-      id: users.length + 1,
-      name: `Dr. ${doctorPrenom} ${doctorNom}`,
-      email: doctorEmail,
-      role: "Doctor",
-      status: doctorStatut,
-      joinDate: today,
+      if (response.ok) {
+        const newDoctor = await response.json()
+        console.log("[v0] Doctor created successfully:", newDoctor)
+        
+        // Refresh users list
+        const refreshRes = await fetch(`${API_URL}/medecin`)
+        if (refreshRes.ok) {
+          const refreshedDoctors = await refreshRes.json()
+          setDoctors(refreshedDoctors)
+        }
+        
+        handleDoctorModalClose()
+        // Re-fetch all users
+        window.location.reload()
+      } else {
+        alert("Failed to create doctor")
+      }
+    } catch (error) {
+      console.log("[v0] Error creating doctor:", error)
+      alert("Error creating doctor")
     }
-    setUsers([...users, newDoctor])
-
-    handleDoctorModalClose()
   }
 
-  const handleCreateSecretary = () => {
+  const handleCreateSecretary = async () => {
     // Validation
     if (!secretaryNom || !secretaryPrenom || !secretaryEmail || !secretaryPassword) {
       alert("Please fill in all required fields")
       return
     }
 
-    // API Integration: POST /secretaire/create
-    console.log("[v0] Creating secretary with data:", {
-      utilisateur: {
-        nom: secretaryNom,
-        prenom: secretaryPrenom,
-        date_naissance: secretaryDateNaissance,
-        sexe: secretarySexe,
-        telephone: secretaryTelephone,
-        adresse: secretaryAdresse,
-        cin: secretaryCin,
-      },
-      compte: {
-        email: secretaryEmail,
-        mot_de_passe: secretaryPassword,
-        role: "secretaire",
-        statut: secretaryStatut,
-      },
-    })
+    try {
+      // API call: POST /secretaire/create
+      const response = await fetch(`${API_URL}/secretaire/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          utilisateur: {
+            nom: secretaryNom,
+            prenom: secretaryPrenom,
+            date_naissance: secretaryDateNaissance || null,
+            sexe: secretarySexe || null,
+            telephone: secretaryTelephone || null,
+            adresse: secretaryAdresse || null,
+            cin: secretaryCin || null,
+          },
+          compte: {
+            email: secretaryEmail,
+            mot_de_passe: secretaryPassword,
+            role: "secretaire",
+            statut: secretaryStatut,
+          },
+        }),
+      })
 
-    // Add secretary to list (temporary)
-    const today = new Date().toISOString().split("T")[0]
-    const newSecretary = {
-      id: users.length + 1,
-      name: `${secretaryPrenom} ${secretaryNom}`,
-      email: secretaryEmail,
-      role: "Assistant",
-      status: secretaryStatut,
-      joinDate: today,
+      if (response.ok) {
+        const newSecretary = await response.json()
+        console.log("[v0] Secretary created successfully:", newSecretary)
+        
+        // Refresh secretaries list
+        const refreshRes = await fetch(`${API_URL}/secretaire`)
+        if (refreshRes.ok) {
+          const refreshedSecretaries = await refreshRes.json()
+          // Update users state with new secretary
+        }
+        
+        handleSecretaryModalClose()
+        // Re-fetch all users
+        window.location.reload()
+      } else {
+        alert("Failed to create secretary")
+      }
+    } catch (error) {
+      console.log("[v0] Error creating secretary:", error)
+      alert("Error creating secretary")
     }
-    setUsers([...users, newSecretary])
-
-    handleSecretaryModalClose()
   }
 
   const itemsPerPage = 5
