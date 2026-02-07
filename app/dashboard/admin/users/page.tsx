@@ -18,16 +18,31 @@ export default function UserManagementPage() {
   const [showSecretaryModal, setShowSecretaryModal] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   
-  // Doctor form state
+  // Doctor form state (Utilisateur + Medecin + Compte)
+  const [doctorNom, setDoctorNom] = useState("")
+  const [doctorPrenom, setDoctorPrenom] = useState("")
+  const [doctorDateNaissance, setDoctorDateNaissance] = useState("")
+  const [doctorSexe, setDoctorSexe] = useState("")
+  const [doctorTelephone, setDoctorTelephone] = useState("")
+  const [doctorAdresse, setDoctorAdresse] = useState("")
+  const [doctorCin, setDoctorCin] = useState("")
   const [doctorEmail, setDoctorEmail] = useState("")
   const [doctorPassword, setDoctorPassword] = useState("")
+  const [doctorStatut, setDoctorStatut] = useState("Active")
   const [numeroLicence, setNumeroLicence] = useState("")
   const [specialiteId, setSpecialiteId] = useState("")
   
-  // Secretary form state
+  // Secretary form state (Utilisateur + Secretaire + Compte)
+  const [secretaryNom, setSecretaryNom] = useState("")
+  const [secretaryPrenom, setSecretaryPrenom] = useState("")
+  const [secretaryDateNaissance, setSecretaryDateNaissance] = useState("")
+  const [secretarySexe, setSecretarySexe] = useState("")
+  const [secretaryTelephone, setSecretaryTelephone] = useState("")
+  const [secretaryAdresse, setSecretaryAdresse] = useState("")
+  const [secretaryCin, setSecretaryCin] = useState("")
   const [secretaryEmail, setSecretaryEmail] = useState("")
   const [secretaryPassword, setSecretaryPassword] = useState("")
-  const [medecinId, setMedecinId] = useState("")
+  const [secretaryStatut, setSecretaryStatut] = useState("Active")
   
   // Mock specialties and doctors list (would be fetched from API)
   const [specialties, setSpecialties] = useState([
@@ -93,8 +108,16 @@ export default function UserManagementPage() {
   const handleDoctorModalClose = () => {
     setShowDoctorModal(false)
     // Reset doctor form
+    setDoctorNom("")
+    setDoctorPrenom("")
+    setDoctorDateNaissance("")
+    setDoctorSexe("")
+    setDoctorTelephone("")
+    setDoctorAdresse("")
+    setDoctorCin("")
     setDoctorEmail("")
     setDoctorPassword("")
+    setDoctorStatut("Active")
     setNumeroLicence("")
     setSpecialiteId("")
   }
@@ -102,35 +125,56 @@ export default function UserManagementPage() {
   const handleSecretaryModalClose = () => {
     setShowSecretaryModal(false)
     // Reset secretary form
+    setSecretaryNom("")
+    setSecretaryPrenom("")
+    setSecretaryDateNaissance("")
+    setSecretarySexe("")
+    setSecretaryTelephone("")
+    setSecretaryAdresse("")
+    setSecretaryCin("")
     setSecretaryEmail("")
     setSecretaryPassword("")
-    setMedecinId("")
+    setSecretaryStatut("Active")
   }
 
   const handleCreateDoctor = () => {
     // Validation
-    if (!doctorEmail || !doctorPassword || !numeroLicence || !specialiteId) {
+    if (!doctorNom || !doctorPrenom || !doctorEmail || !doctorPassword || !numeroLicence || !specialiteId) {
       alert("Please fill in all required fields")
       return
     }
 
     // API Integration: POST /medecin/create
     console.log("[v0] Creating doctor with data:", {
-      email: doctorEmail,
-      mot_de_passe: doctorPassword,
-      numero_licence: numeroLicence,
-      specialite_id: specialiteId,
-      role: "Doctor",
+      utilisateur: {
+        nom: doctorNom,
+        prenom: doctorPrenom,
+        date_naissance: doctorDateNaissance,
+        sexe: doctorSexe,
+        telephone: doctorTelephone,
+        adresse: doctorAdresse,
+        cin: doctorCin,
+      },
+      compte: {
+        email: doctorEmail,
+        mot_de_passe: doctorPassword,
+        role: "medecin",
+        statut: doctorStatut,
+      },
+      medecin: {
+        numero_licence: numeroLicence,
+        specialite_id: specialiteId,
+      },
     })
 
     // Add doctor to list (temporary)
     const today = new Date().toISOString().split("T")[0]
     const newDoctor = {
       id: users.length + 1,
-      name: `Dr. ${doctorEmail.split("@")[0]}`,
+      name: `Dr. ${doctorPrenom} ${doctorNom}`,
       email: doctorEmail,
       role: "Doctor",
-      status: "Active",
+      status: doctorStatut,
       joinDate: today,
     }
     setUsers([...users, newDoctor])
@@ -140,27 +184,38 @@ export default function UserManagementPage() {
 
   const handleCreateSecretary = () => {
     // Validation
-    if (!secretaryEmail || !secretaryPassword) {
+    if (!secretaryNom || !secretaryPrenom || !secretaryEmail || !secretaryPassword) {
       alert("Please fill in all required fields")
       return
     }
 
     // API Integration: POST /secretaire/create
     console.log("[v0] Creating secretary with data:", {
-      email: secretaryEmail,
-      mot_de_passe: secretaryPassword,
-      medecin_id: medecinId || null,
-      role: "Assistant",
+      utilisateur: {
+        nom: secretaryNom,
+        prenom: secretaryPrenom,
+        date_naissance: secretaryDateNaissance,
+        sexe: secretarySexe,
+        telephone: secretaryTelephone,
+        adresse: secretaryAdresse,
+        cin: secretaryCin,
+      },
+      compte: {
+        email: secretaryEmail,
+        mot_de_passe: secretaryPassword,
+        role: "secretaire",
+        statut: secretaryStatut,
+      },
     })
 
     // Add secretary to list (temporary)
     const today = new Date().toISOString().split("T")[0]
     const newSecretary = {
       id: users.length + 1,
-      name: `Secretary ${secretaryEmail.split("@")[0]}`,
+      name: `${secretaryPrenom} ${secretaryNom}`,
       email: secretaryEmail,
       role: "Assistant",
-      status: "Active",
+      status: secretaryStatut,
       joinDate: today,
     }
     setUsers([...users, newSecretary])
@@ -331,49 +386,143 @@ export default function UserManagementPage() {
               </div>
               <CardContent className="p-6">
                 <h2 className="text-xl font-bold text-[#0A1F44] mb-4">Add New Doctor</h2>
-                <form className="space-y-4">
+                <form className="space-y-4 max-h-[70vh] overflow-y-auto">
+                  {/* Personal Information */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                    <Input 
-                      type="email" 
-                      placeholder="Enter email address"
-                      value={doctorEmail}
-                      onChange={(e) => setDoctorEmail(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Password *</label>
-                    <Input 
-                      type="password" 
-                      placeholder="Enter password"
-                      value={doctorPassword}
-                      onChange={(e) => setDoctorPassword(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Numero Licence *</label>
-                    <Input 
-                      type="text" 
-                      placeholder="Enter license number"
-                      value={numeroLicence}
-                      onChange={(e) => setNumeroLicence(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Specialite *</label>
-                    <select 
-                      value={specialiteId}
-                      onChange={(e) => setSpecialiteId(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0066FF] focus:border-transparent"
-                    >
-                      <option value="">Select a specialty</option>
-                      {specialties.map((spec) => (
-                        <option key={spec.id} value={spec.id}>{spec.name}</option>
-                      ))}
-                    </select>
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Personal Information</h3>
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">First Name *</label>
+                          <Input 
+                            placeholder="Prenom"
+                            value={doctorPrenom}
+                            onChange={(e) => setDoctorPrenom(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Last Name *</label>
+                          <Input 
+                            placeholder="Nom"
+                            value={doctorNom}
+                            onChange={(e) => setDoctorNom(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Date of Birth</label>
+                          <Input 
+                            type="date"
+                            value={doctorDateNaissance}
+                            onChange={(e) => setDoctorDateNaissance(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Gender</label>
+                          <select 
+                            value={doctorSexe}
+                            onChange={(e) => setDoctorSexe(e.target.value)}
+                            className="w-full px-2 py-2 border border-gray-300 rounded text-sm"
+                          >
+                            <option value="">Select</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
+                        <Input 
+                          placeholder="Telephone"
+                          value={doctorTelephone}
+                          onChange={(e) => setDoctorTelephone(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Address</label>
+                        <Input 
+                          placeholder="Adresse"
+                          value={doctorAdresse}
+                          onChange={(e) => setDoctorAdresse(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">ID/CIN</label>
+                        <Input 
+                          placeholder="CIN"
+                          value={doctorCin}
+                          onChange={(e) => setDoctorCin(e.target.value)}
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex gap-3 pt-4">
+                  {/* Professional Information */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Professional Information</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">License Number *</label>
+                        <Input 
+                          placeholder="Numero Licence"
+                          value={numeroLicence}
+                          onChange={(e) => setNumeroLicence(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Specialty *</label>
+                        <select 
+                          value={specialiteId}
+                          onChange={(e) => setSpecialiteId(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0066FF]"
+                        >
+                          <option value="">Select a specialty</option>
+                          {specialties.map((spec) => (
+                            <option key={spec.id} value={spec.id}>{spec.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Account Information */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Account Information</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Email *</label>
+                        <Input 
+                          type="email" 
+                          placeholder="Email address"
+                          value={doctorEmail}
+                          onChange={(e) => setDoctorEmail(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Password *</label>
+                        <Input 
+                          type="password" 
+                          placeholder="Password"
+                          value={doctorPassword}
+                          onChange={(e) => setDoctorPassword(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
+                        <select 
+                          value={doctorStatut}
+                          onChange={(e) => setDoctorStatut(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        >
+                          <option value="Active">Active</option>
+                          <option value="Inactive">Inactive</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-4 border-t border-gray-200">
                     <Button onClick={handleDoctorModalClose} variant="outline" className="flex-1">
                       Cancel
                     </Button>
@@ -405,40 +554,115 @@ export default function UserManagementPage() {
               </div>
               <CardContent className="p-6">
                 <h2 className="text-xl font-bold text-[#0A1F44] mb-4">Add New Secretary</h2>
-                <form className="space-y-4">
+                <form className="space-y-4 max-h-[70vh] overflow-y-auto">
+                  {/* Personal Information */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                    <Input 
-                      type="email" 
-                      placeholder="Enter email address"
-                      value={secretaryEmail}
-                      onChange={(e) => setSecretaryEmail(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Password *</label>
-                    <Input 
-                      type="password" 
-                      placeholder="Enter password"
-                      value={secretaryPassword}
-                      onChange={(e) => setSecretaryPassword(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Medecin (Doctor)</label>
-                    <select 
-                      value={medecinId}
-                      onChange={(e) => setMedecinId(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0066FF] focus:border-transparent"
-                    >
-                      <option value="">Select a doctor (optional)</option>
-                      {doctors.map((doc) => (
-                        <option key={doc.id} value={doc.id}>{doc.name}</option>
-                      ))}
-                    </select>
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Personal Information</h3>
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">First Name *</label>
+                          <Input 
+                            placeholder="Prenom"
+                            value={secretaryPrenom}
+                            onChange={(e) => setSecretaryPrenom(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Last Name *</label>
+                          <Input 
+                            placeholder="Nom"
+                            value={secretaryNom}
+                            onChange={(e) => setSecretaryNom(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Date of Birth</label>
+                          <Input 
+                            type="date"
+                            value={secretaryDateNaissance}
+                            onChange={(e) => setSecretaryDateNaissance(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Gender</label>
+                          <select 
+                            value={secretarySexe}
+                            onChange={(e) => setSecretarySexe(e.target.value)}
+                            className="w-full px-2 py-2 border border-gray-300 rounded text-sm"
+                          >
+                            <option value="">Select</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
+                        <Input 
+                          placeholder="Telephone"
+                          value={secretaryTelephone}
+                          onChange={(e) => setSecretaryTelephone(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Address</label>
+                        <Input 
+                          placeholder="Adresse"
+                          value={secretaryAdresse}
+                          onChange={(e) => setSecretaryAdresse(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">ID/CIN</label>
+                        <Input 
+                          placeholder="CIN"
+                          value={secretaryCin}
+                          onChange={(e) => setSecretaryCin(e.target.value)}
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex gap-3 pt-4">
+                  {/* Account Information */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Account Information</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Email *</label>
+                        <Input 
+                          type="email" 
+                          placeholder="Email address"
+                          value={secretaryEmail}
+                          onChange={(e) => setSecretaryEmail(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Password *</label>
+                        <Input 
+                          type="password" 
+                          placeholder="Password"
+                          value={secretaryPassword}
+                          onChange={(e) => setSecretaryPassword(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
+                        <select 
+                          value={secretaryStatut}
+                          onChange={(e) => setSecretaryStatut(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        >
+                          <option value="Active">Active</option>
+                          <option value="Inactive">Inactive</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-4 border-t border-gray-200">
                     <Button onClick={handleSecretaryModalClose} variant="outline" className="flex-1">
                       Cancel
                     </Button>
