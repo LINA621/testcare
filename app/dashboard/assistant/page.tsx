@@ -5,27 +5,61 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
+const API_URL = "http://localhost:8080/api/v1"
+
 export default function AssistantDashboard() {
   const [stats, setStats] = useState({
     totalAppointments: 0,
     todayAppointments: 0,
     totalPatients: 0,
   })
-  const [recentActivities, setRecentActivities] = useState<any[]>([])
+  const [recentAppointments, setRecentAppointments] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [secretaireId, setSecretaireId] = useState<string>("")
 
   useEffect(() => {
-    // API_ENDPOINT: GET /api/assistant/statistics
-    // API_ENDPOINT: GET /api/assistant/recent-activities
     const fetchData = async () => {
       try {
-        // Replace with actual API call
-        // const response = await fetch('/api/assistant/statistics')
-        // const data = await response.json()
-        // setStats(data)
+        setIsLoading(true)
+        const storedSecretaireId = localStorage.getItem("userId")
+        if (storedSecretaireId) {
+          setSecretaireId(storedSecretaireId)
+
+          // Fetch all appointments: GET /rendezvous
+          const appointmentsRes = await fetch(`${API_URL}/rendezvous`)
+          const appointmentsData = appointmentsRes.ok ? await appointmentsRes.json() : []
+
+          // Fetch all patients: GET /patient
+          const patientsRes = await fetch(`${API_URL}/patient`)
+          const patientsData = patientsRes.ok ? await patientsRes.json() : []
+
+          // Get today's appointments
+          const today = new Date().toISOString().split("T")[0]
+          const todayAppts = appointmentsData.filter(
+            (appt: any) => appt.date && appt.date.split("T")[0] === today
+          )
+
+          setStats({
+            totalAppointments: appointmentsData.length,
+            todayAppointments: todayAppts.length,
+            totalPatients: patientsData.length,
+          })
+
+          // Set recent appointments
+          setRecentAppointments(
+            appointmentsData.slice(0, 5).map((appt: any) => ({
+              id: appt.id,
+              date: appt.date,
+              statut: appt.statut,
+              raison: appt.raison,
+              patient: appt.patient?.utilisateur,
+              medecin: appt.medecin?.utilisateur,
+            }))
+          )
+        }
         setIsLoading(false)
       } catch (error) {
-        console.error("[v0] Failed to fetch assistant data:", error)
+        console.log("[v0] Failed to fetch assistant data:", error)
         setIsLoading(false)
       }
     }
@@ -49,7 +83,7 @@ export default function AssistantDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Total Appointments</p>
-                  <p className="text-3xl font-bold text-[#0A1F44]">0</p>
+                  <p className="text-3xl font-bold text-[#0A1F44]">{isLoading ? "-" : stats.totalAppointments}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center opacity-60">
                   <svg className="w-6 h-6 text-[#0066FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -70,7 +104,7 @@ export default function AssistantDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Today's Appointments</p>
-                  <p className="text-3xl font-bold text-[#0A1F44]">0</p>
+                  <p className="text-3xl font-bold text-[#0A1F44]">{isLoading ? "-" : stats.todayAppointments}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center opacity-60">
                   <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,7 +125,7 @@ export default function AssistantDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Total Patients</p>
-                  <p className="text-3xl font-bold text-[#0A1F44]">0</p>
+                  <p className="text-3xl font-bold text-[#0A1F44]">{isLoading ? "-" : stats.totalPatients}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center opacity-60">
                   <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,18 +145,49 @@ export default function AssistantDashboard() {
 
 
 
-        {/* Assigned Doctors */}
+        {/* Recent Appointments */}
         <Card>
           <CardHeader>
-            <CardTitle>Assigned Doctors</CardTitle>
+            <CardTitle>Recent Appointments</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="text-center py-8 text-gray-500">
-                <p>No doctors assigned yet</p>
-                <p className="text-sm mt-2">Your assigned doctors will appear here</p>
+            {isLoading ? (
+              <p className="text-center py-8 text-gray-500">Loading appointments...</p>
+            ) : recentAppointments.length > 0 ? (
+              <div className="space-y-4">
+                {recentAppointments.map((appt) => (
+                  <div
+                    key={appt.id}
+                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+                  >
+                    <div className="flex-1">
+                      <p className="font-medium text-[#0A1F44]">
+                        {appt.patient?.prenom} {appt.patient?.nom}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        Doctor: Dr. {appt.medecin?.prenom} {appt.medecin?.nom}
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        {new Date(appt.date).toLocaleDateString()} - {appt.raison}
+                      </p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      appt.statut === 'Confirmed'
+                        ? 'bg-green-50 text-green-700'
+                        : appt.statut === 'Annule'
+                        ? 'bg-red-50 text-red-700'
+                        : 'bg-blue-50 text-blue-700'
+                    }`}>
+                      {appt.statut}
+                    </span>
+                  </div>
+                ))}
               </div>
-            </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>No appointments yet</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

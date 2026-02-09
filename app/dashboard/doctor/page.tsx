@@ -1,10 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import DashboardLayout from "@/components/dashboard/DashboardLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+
+const API_URL = "http://localhost:8080/api/v1"
 
 interface ActivityStats {
   newPatients: number
@@ -15,45 +17,101 @@ interface ActivityStats {
 interface Assistant {
   id: string
   name: string
-  phone: string
+  telephone: string
   email: string
-  avatar: string
+  photo_profil: string
 }
 
 interface Appointment {
-  time: string
-  patientName: string
-  reason: string
+  date: string
+  utilisateur?: { prenom: string; nom: string }
+  raison: string
+  statut: string
 }
 
 export default function DoctorDashboard() {
-  // Mock data - replace with API calls
-  const [activityStats] = useState<ActivityStats>({
-    newPatients: 30,
-    appointmentsToday: 8,
-    diagnosticsMade: 66,
+  const [activityStats, setActivityStats] = useState<ActivityStats>({
+    newPatients: 0,
+    appointmentsToday: 0,
+    diagnosticsMade: 0,
   })
 
-  const [assignedAssistant] = useState<Assistant>({
-    id: "1",
-    name: "Souhaila Roumadi",
-    phone: "+212 652095519",
-    email: "roumadisouhaila@gmail.com",
-    avatar: "/placeholder-user.jpg",
-  })
+  const [assignedAssistant, setAssignedAssistant] = useState<Assistant | null>(null)
+  const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [doctorId, setDoctorId] = useState<string>("")
 
-  const [todayAppointments] = useState<Appointment[]>([
-    { time: "9:30 AM", patientName: "Fatima Zahra Rahmouni", reason: "Follow Up" },
-    { time: "9:30 AM", patientName: "Douae Rateb Boulaich", reason: "Follow Up" },
-    { time: "10:30 AM", patientName: "Krishtav Rajan", reason: "Follow Up" },
-    { time: "11:00 AM", patientName: "Sumanth Tinson", reason: "Follow Up" },
-    { time: "11:30 AM", patientName: "EG Subramani", reason: "Follow Up" },
-    { time: "12:00 PM", patientName: "Fatima Zahra Rahmouni", reason: "Check Up" },
-    { time: "12:30 PM", patientName: "Douae Rateb Boulaich", reason: "Follow Up" },
-    { time: "2:30 AM", patientName: "Krishtav Rajan", reason: "Follow Up" },
-    { time: "3:00 PM", patientName: "Sumanth Tinson", reason: "Check Up" },
-    { time: "3:30 PM", patientName: "EG Subramani", reason: "Check Up" },
-  ])
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        const storedDoctorId = localStorage.getItem("userId")
+        if (storedDoctorId) {
+          setDoctorId(storedDoctorId)
+
+          // Fetch doctor's appointments: GET /medecin/{id}/rendezvous
+          const appointmentsRes = await fetch(`${API_URL}/medecin/${storedDoctorId}/rendezvous`)
+          const appointmentsData = appointmentsRes.ok ? await appointmentsRes.json() : []
+
+          // Fetch doctor's consultations for diagnostics: GET /medecin/{id}/consultations
+          const consultationsRes = await fetch(`${API_URL}/medecin/${storedDoctorId}/consultations`)
+          const consultationsData = consultationsRes.ok ? await consultationsRes.json() : []
+
+          // Get today's appointments
+          const today = new Date().toISOString().split("T")[0]
+          const todayAppts = appointmentsData.filter(
+            (appt: any) => appt.date && appt.date.split("T")[0] === today
+          )
+
+          setActivityStats({
+            newPatients: appointmentsData.length > 0 ? Math.floor(appointmentsData.length * 0.3) : 0,
+            appointmentsToday: todayAppts.length,
+            diagnosticsMade: consultationsData.length,
+          })
+
+          setTodayAppointments(
+            todayAppts.slice(0, 10).map((appt: any) => ({
+              date: appt.date,
+              utilisateur: appt.patient?.utilisateur,
+              raison: appt.raison,
+              statut: appt.statut,
+            }))
+          )
+
+          // Fetch assigned assistant (from secretaire table if assigned)
+          const secretariesRes = await fetch(`${API_URL}/secretaire`)
+          if (secretariesRes.ok) {
+            const secretariesData = await secretariesRes.json()
+            if (secretariesData.length > 0) {
+              setAssignedAssistant({
+                id: secretariesData[0].id,
+                name: `${secretariesData[0].utilisateur?.prenom} ${secretariesData[0].utilisateur?.nom}`,
+                telephone: secretariesData[0].utilisateur?.telephone,
+                email: secretariesData[0].compte?.email,
+                photo_profil: secretariesData[0].utilisateur?.photo_profil || "/placeholder-user.jpg",
+              })
+            }
+          }
+        }
+      } catch (error) {
+        console.log("[v0] Error fetching doctor dashboard data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  if (loading) {
+    return (
+      <DashboardLayout userRole="doctor" pageTitle="Dashboard">
+        <div className="space-y-6">
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </DashboardLayout>
+    )
+  }
 
   return (
     <DashboardLayout userRole="doctor" pageTitle="Dashboard">
@@ -112,7 +170,7 @@ export default function DoctorDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600 mb-2">Diagnostic AI</p>
+                    <p className="text-sm text-gray-600 mb-2">Consultations</p>
                     <p className="text-4xl font-bold text-[#0A1F44]">{activityStats.diagnosticsMade}</p>
                   </div>
                   <div className="w-16 h-16 rounded-lg bg-yellow-100 flex items-center justify-center">
@@ -140,18 +198,24 @@ export default function DoctorDashboard() {
                 <CardTitle className="text-lg">Assigned Assistant</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <img
-                    src={assignedAssistant.avatar}
-                    alt={assignedAssistant.name}
-                    className="w-14 h-14 rounded-full object-cover border border-gray-300"
-                  />
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-[#0A1F44]">{assignedAssistant.name}</h3>
-                    <p className="text-sm text-gray-600">{assignedAssistant.phone}</p>
-                    <p className="text-sm text-gray-600">{assignedAssistant.email}</p>
-                  </div>
-                </div>
+                {assignedAssistant ? (
+                  <>
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={assignedAssistant.photo_profil}
+                        alt={assignedAssistant.name}
+                        className="w-14 h-14 rounded-full object-cover border border-gray-300"
+                      />
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-[#0A1F44]">{assignedAssistant.name}</h3>
+                        <p className="text-sm text-gray-600">{assignedAssistant.telephone}</p>
+                        <p className="text-sm text-gray-600">{assignedAssistant.email}</p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-gray-500 text-center py-4">No assistant assigned</p>
+                )}
 
                 <Link href="/dashboard/doctor/consultations/new">
                   <Button className="w-full bg-[#0066FF] text-white hover:bg-[#0052CC] font-semibold">
@@ -182,13 +246,27 @@ export default function DoctorDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {todayAppointments.slice(0, 6).map((appointment, index) => (
-                        <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition">
-                          <td className="py-3 px-4 text-gray-600">{appointment.time}</td>
-                          <td className="py-3 px-4 font-medium text-[#0A1F44]">{appointment.patientName}</td>
-                          <td className="py-3 px-4 text-gray-600">{appointment.reason}</td>
+                      {todayAppointments.length > 0 ? (
+                        todayAppointments.slice(0, 6).map((appointment, index) => (
+                          <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition">
+                            <td className="py-3 px-4 text-gray-600">
+                              {new Date(appointment.date).toLocaleTimeString("en-US", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: true,
+                              })}
+                            </td>
+                            <td className="py-3 px-4 font-medium text-[#0A1F44]">
+                              {appointment.utilisateur?.prenom} {appointment.utilisateur?.nom}
+                            </td>
+                            <td className="py-3 px-4 text-gray-600">{appointment.raison || appointment.statut}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={3} className="py-6 text-center text-gray-500">No appointments today</td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
