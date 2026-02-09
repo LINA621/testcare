@@ -141,13 +141,7 @@ export default function DoctorAppointments() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </Button>
-            <select
-              value={activeTab === 'new' ? newAptDoctor : historyAptDoctor}
-              onChange={(e) => activeTab === 'new' ? setNewAptDoctor(e.target.value) : setHistoryAptDoctor(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066FF] text-sm"
-            >
-              <option value="">Filter by Doctor Name</option>
-              <option value="Dr. Fatima Marouon">Dr. Fatima Marouon</option>
+
             </select>
           </div>
         </div>

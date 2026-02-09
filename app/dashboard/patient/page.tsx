@@ -5,16 +5,46 @@ import Link from "next/link"
 import DashboardLayout from "@/components/dashboard/DashboardLayout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { apiService } from "@/lib/api"
+
+const API_URL = "http://localhost:8080/api/v1"
 
 export default function PatientDashboard() {
   const [appointments, setAppointments] = useState<any[]>([])
+  const [medicalRecords, setMedicalRecords] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [patientId, setPatientId] = useState<string>('')
 
   useEffect(() => {
-    // API_ENDPOINT: GET /api/patient/appointments
-    // Response: Array of appointment objects
-    setIsLoading(false)
+    const fetchData = async () => {
+      try {
+        setIsLoading(true)
+        const storedPatientId = localStorage.getItem("userId")
+        if (storedPatientId) {
+          setPatientId(storedPatientId)
+
+          // Fetch patient appointments
+          const appointmentsRes = await fetch(`${API_URL}/patient`)
+          if (appointmentsRes.ok) {
+            const allAppointments = await appointmentsRes.json()
+            // Filter appointments for this patient
+            const patientAppts = allAppointments.filter((apt: any) => apt.patient_id == storedPatientId) || []
+            setAppointments(patientAppts.slice(0, 5))
+          }
+
+          // Fetch medical records
+          const recordsRes = await fetch(`${API_URL}/consultation/patient/${storedPatientId}`)
+          if (recordsRes.ok) {
+            const records = await recordsRes.json()
+            setMedicalRecords(records || [])
+          }
+        }
+      } catch (error) {
+        console.log("[v0] Error fetching patient dashboard data:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchData()
   }, [])
 
   return (
@@ -32,8 +62,8 @@ export default function PatientDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Upcoming Appointments</p>
-                  <p className="text-3xl font-bold text-[#0A1F44]">3</p>
+                  <p className="text-sm text-gray-600 mb-1">My Appointments</p>
+                  <p className="text-3xl font-bold text-[#0A1F44]">{isLoading ? "-" : appointments.length}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
                   <svg className="w-6 h-6 text-[#0066FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,7 +84,7 @@ export default function PatientDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Medical Records</p>
-                  <p className="text-3xl font-bold text-[#0A1F44]">12</p>
+                  <p className="text-3xl font-bold text-[#0A1F44]">{isLoading ? "-" : medicalRecords.length}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center">
                   <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,8 +104,8 @@ export default function PatientDashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Total Appointments</p>
-                  <p className="text-3xl font-bold text-[#0A1F44]">5</p>
+                  <p className="text-sm text-gray-600 mb-1">Consultations</p>
+                  <p className="text-3xl font-bold text-[#0A1F44]">{isLoading ? "-" : medicalRecords.length}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center">
                   <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

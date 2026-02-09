@@ -7,72 +7,37 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
+const API_URL = "http://localhost:8080/api/v1"
+
 interface Consultation {
-  id: number
-  consultationId: number
+  id: string
   date: string
-  time: string
-  doctorName: string
-  diagnosis: string
-  notes: string
-  documentId: number
+  motif: string
+  rapport: string
+  medecin: { utilisateur?: { prenom: string; nom: string } }
 }
 
 export default function MedicalRecordsPage() {
-  const [consultations, setConsultations] = useState<Consultation[]>([
-    {
-      id: 1,
-      consultationId: 1,
-      date: '2024-12-28',
-      time: '10:30 AM',
-      doctorName: 'Dr. Michael Lee',
-      diagnosis: 'Seasonal Flu',
-      notes: 'Patient showing improvement with rest and hydration',
-      documentId: 1,
-    },
-    {
-      id: 2,
-      consultationId: 2,
-      date: '2024-11-15',
-      time: '02:00 PM',
-      doctorName: 'Dr. Sarah Johnson',
-      diagnosis: 'Annual Checkup',
-      notes: 'All vitals normal, continue current lifestyle',
-      documentId: 2,
-    },
-    {
-      id: 3,
-      consultationId: 3,
-      date: '2024-10-20',
-      time: '09:00 AM',
-      doctorName: 'Dr. Ahmad Hassan',
-      diagnosis: 'Hypertension Follow-up',
-      notes: 'Blood pressure slightly elevated, adjust medication',
-      documentId: 3,
-    },
-  ])
-  const [isLoading, setIsLoading] = useState(false)
+  const [consultations, setConsultations] = useState<Consultation[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-
-  // API_ENDPOINT: GET /api/medical-records/consultations
-  // Response: Array of consultations from document_medical table
-  // Database: SELECT * FROM consultations 
-  //   JOIN document_medical ON consultations.document_id = document_medical.id
-  //   WHERE patient_id = current_patient_id
+  const [patientId, setPatientId] = useState<string>('')
 
   useEffect(() => {
-    // Fetch consultations from document_medical + consultations tables
     const fetchConsultations = async () => {
-      setIsLoading(true)
       try {
-        // In production, this would be:
-        // const response = await fetch('/api/medical-records/consultations')
-        // const data = await response.json()
-        // setConsultations(data)
-        
-        console.log('[v0] Fetched consultations from document_medical + consultations tables')
+        setIsLoading(true)
+        const storedPatientId = localStorage.getItem("userId")
+        if (storedPatientId) {
+          setPatientId(storedPatientId)
+          const res = await fetch(`${API_URL}/consultation/patient/${storedPatientId}`)
+          if (res.ok) {
+            const data = await res.json()
+            setConsultations(data || [])
+          }
+        }
       } catch (error) {
-        console.error('[v0] Failed to fetch consultations:', error)
+        console.log('[v0] Failed to fetch consultations:', error)
       } finally {
         setIsLoading(false)
       }

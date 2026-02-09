@@ -7,96 +7,50 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
+const API_URL = "http://localhost:8080/api/v1"
+
 interface Appointment {
-  id: number
-  patientName: string
-  doctorName: string
-  specialty: string
+  id: string
   date: string
-  time: string
-  reason: string
-  status: 'planned' | 'reschedule' | 'completed'
+  statut: string
+  patient: { utilisateur?: { prenom: string; nom: string } }
+  medecin: { utilisateur?: { prenom: string; nom: string } }
+  raison: string
 }
 
 export default function PatientAppointments() {
-  const [appointments, setAppointments] = useState<Appointment[]>([
-    {
-      id: 1,
-      patientName: 'Douae Rateb Boulaich',
-      doctorName: 'Dr. Fatima Marouon',
-      specialty: 'Dr. Fatima Marouon',
-      date: '05/12/2025',
-      time: '9:30 AM',
-      reason: 'Check Up',
-      status: 'reschedule',
-    },
-    {
-      id: 2,
-      patientName: 'Douae Rateb Boulaich',
-      doctorName: 'Dr. Fatima Marouon',
-      specialty: 'Dr. Fatima Marouon',
-      date: '05/12/2025',
-      time: '9:30 AM',
-      reason: 'Follow up',
-      status: 'planned',
-    },
-    {
-      id: 3,
-      patientName: 'Douae Rateb Boulaich',
-      doctorName: 'Dr. Fatima Marouon',
-      specialty: 'Dr. Fatima Marouon',
-      date: '05/12/2025',
-      time: '9:30 AM',
-      reason: 'Follow up',
-      status: 'reschedule',
-    },
-    {
-      id: 4,
-      patientName: 'Douae Rateb Boulaich',
-      doctorName: 'Dr. Fatima Marouon',
-      specialty: 'Dr. Fatima Marouon',
-      date: '05/12/2025',
-      time: '9:30 AM',
-      reason: 'Check Up',
-      status: 'planned',
-    },
-    {
-      id: 5,
-      patientName: 'Douae Rateb Boulaich',
-      doctorName: 'Dr. Fatima Marouon',
-      specialty: 'Dr. Fatima Marouon',
-      date: '05/12/2025',
-      time: '9:30 AM',
-      reason: 'Check Up',
-      status: 'planned',
-    },
-    {
-      id: 6,
-      patientName: 'Douae Rateb Boulaich',
-      doctorName: 'Dr. Fatima Marouon',
-      specialty: 'Dr. Fatima Marouon',
-      date: '05/12/2025',
-      time: '9:30 AM',
-      reason: 'Check Up',
-      status: 'planned',
-    },
-    {
-      id: 7,
-      patientName: 'Douae Rateb Boulaich',
-      doctorName: 'Dr. Fatima Marouon',
-      specialty: 'Dr. Fatima Marouon',
-      date: '05/12/2025',
-      time: '9:30 AM',
-      reason: 'Check Up',
-      status: 'reschedule',
-    },
-  ])
-
+  const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [patientId, setPatientId] = useState<string>('')
   const [activeTab, setActiveTab] = useState<'new' | 'history'>('new')
   const [newSearchTerm, setNewSearchTerm] = useState('')
   const [newDateFilter, setNewDateFilter] = useState('')
   const [historySearchTerm, setHistorySearchTerm] = useState('')
   const [historyDateFilter, setHistoryDateFilter] = useState('')
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        setLoading(true)
+        const storedPatientId = localStorage.getItem("userId")
+        if (storedPatientId) {
+          setPatientId(storedPatientId)
+          const res = await fetch(`${API_URL}/rendezvous`)
+          if (res.ok) {
+            const data = await res.json()
+            // Filter for this patient
+            const patientAppts = data.filter((apt: any) => apt.patient_id == storedPatientId) || []
+            setAppointments(patientAppts)
+          }
+        }
+      } catch (error) {
+        console.log("[v0] Error fetching appointments:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchAppointments()
+  }, [])
 
   const getStatusBadge = (status: string) => {
     if (status === 'planned') {
