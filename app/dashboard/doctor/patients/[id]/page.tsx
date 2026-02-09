@@ -15,8 +15,6 @@ interface PatientDetails {
   bloodType: string
   allergies: string
   chronicDiseases: string
-  medicalHistory: string
-  lastVisit: string
   avatar: string
 }
 
@@ -35,8 +33,6 @@ export default function PatientProfilePage() {
     bloodType: 'B+ve',
     allergies: 'Penicillin, Shellfish',
     chronicDiseases: 'Diabetes, High blood pressure',
-    medicalHistory: 'Previous surgeries: Appendectomy (2010), Knee arthroscopy (2015). Medications: Metformin, Lisinopril',
-    lastVisit: 'January 15, 2025',
     avatar: '/placeholder-user.jpg',
   })
 
@@ -78,10 +74,6 @@ export default function PatientProfilePage() {
                   <div>
                     <p className="text-xs text-gray-600 font-semibold mb-1">Blood Type</p>
                     <p className="text-lg font-semibold text-[#0A1F44]">{patient.bloodType}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 font-semibold mb-1">Last Visit</p>
-                    <p className="text-lg font-semibold text-[#0A1F44]">{patient.lastVisit}</p>
                   </div>
                 </div>
               </div>
