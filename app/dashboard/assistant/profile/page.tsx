@@ -199,8 +199,9 @@ export default function AssistantProfile() {
             )}
           </CardContent>
         </Card>
-
-
+            </Card>
+          </>
+        )}
       </div>
     </DashboardLayout>
   )
