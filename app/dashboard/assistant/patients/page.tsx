@@ -1,93 +1,54 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
+const API_URL = "http://localhost:8080/api/v1"
+
 interface Patient {
   id: string
-  name: string
-  age: number
-  bloodGroup: string
-  chronicDiseases: string
-  avatar: string
+  utilisateur?: { prenom: string; nom: string; photo_profil?: string }
+  date_naissance?: string
+  groupe_sanguin?: string
 }
 
 export default function AssistantPatients() {
   const [searchTerm, setSearchTerm] = useState('')
+  const [patients, setPatients] = useState<Patient[]>([])
   const [filteredPatients, setFilteredPatients] = useState<Patient[]>([])
+  const [loading, setLoading] = useState(true)
 
-  // Mock patient data - patients with appointments to this doctor
-  const [patients] = useState<Patient[]>([
-    {
-      id: '1',
-      name: 'Fatima Zahra Rahmouni',
-      age: 45,
-      bloodGroup: 'B+ve',
-      chronicDiseases: 'Diabetes - High blood pressure',
-      avatar: '/placeholder-user.jpg',
-    },
-    {
-      id: '2',
-      name: 'Fouad Raissouni',
-      age: 62,
-      bloodGroup: 'B+ve',
-      chronicDiseases: 'High Cholesterol',
-      avatar: '/placeholder-user.jpg',
-    },
-    {
-      id: '3',
-      name: 'Krishtav Rajan',
-      age: 33,
-      bloodGroup: 'B+ve',
-      chronicDiseases: 'Heart disease',
-      avatar: '/placeholder-user.jpg',
-    },
-    {
-      id: '4',
-      name: 'Sumanth Tinson',
-      age: 26,
-      bloodGroup: 'AB+ve',
-      chronicDiseases: 'Diabetes',
-      avatar: '/placeholder-user.jpg',
-    },
-    {
-      id: '5',
-      name: 'EG Subramani',
-      age: 42,
-      bloodGroup: 'AB-ve',
-      chronicDiseases: 'Cancer - Heart disease',
-      avatar: '/placeholder-user.jpg',
-    },
-    {
-      id: '6',
-      name: 'Ranjan Maari',
-      age: 23,
-      bloodGroup: 'AB-ve',
-      chronicDiseases: 'High blood pressure',
-      avatar: '/placeholder-user.jpg',
-    },
-    {
-      id: '7',
-      name: 'Philliplie Gopal',
-      age: 14,
-      bloodGroup: 'AB+ve',
-      chronicDiseases: 'High Cholesterol - High blood pressure',
-      avatar: '/placeholder-user.jpg',
-    },
-  ])
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        setLoading(true)
+        const res = await fetch(`${API_URL}/patient`)
+        if (res.ok) {
+          const data = await res.json()
+          setPatients(data)
+        }
+      } catch (error) {
+        console.log("[v0] Error fetching patients:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchPatients()
+  }, [])
 
   const handleSearch = (value: string) => {
     setSearchTerm(value)
     if (value.trim() === '') {
       setFilteredPatients([])
     } else {
-      const filtered = patients.filter((patient) =>
-        patient.name.toLowerCase().includes(value.toLowerCase())
-      )
+      const filtered = patients.filter((patient) => {
+        const patientName = `${patient.utilisateur?.prenom} ${patient.utilisateur?.nom}`.toLowerCase()
+        return patientName.includes(value.toLowerCase())
+      })
       setFilteredPatients(filtered)
     }
   }
@@ -130,7 +91,11 @@ export default function AssistantPatients() {
                   </tr>
                 </thead>
                 <tbody>
-                  {displayedPatients.length === 0 && searchTerm ? (
+                  {loading ? (
+                    <tr>
+                      <td colSpan={5} className="text-center py-12 text-gray-500">Loading...</td>
+                    </tr>
+                  ) : displayedPatients.length === 0 && searchTerm ? (
                     <tr>
                       <td colSpan={5} className="text-center py-12 text-gray-500">
                         No patients found matching your search.
@@ -148,16 +113,18 @@ export default function AssistantPatients() {
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-3">
                             <img
-                              src={patient.avatar}
-                              alt={patient.name}
+                              src={patient.utilisateur?.photo_profil || '/placeholder-user.jpg'}
+                              alt={`${patient.utilisateur?.prenom} ${patient.utilisateur?.nom}`}
                               className="w-10 h-10 rounded-full object-cover border border-gray-300"
                             />
-                            <span className="font-medium text-[#0A1F44]">{patient.name}</span>
+                            <span className="font-medium text-[#0A1F44]">
+                              {patient.utilisateur?.prenom} {patient.utilisateur?.nom}
+                            </span>
                           </div>
                         </td>
-                        <td className="py-4 px-6 text-gray-700">{patient.age}</td>
-                        <td className="py-4 px-6 text-gray-700">{patient.bloodGroup}</td>
-                        <td className="py-4 px-6 text-gray-700">{patient.chronicDiseases}</td>
+                        <td className="py-4 px-6 text-gray-700">-</td>
+                        <td className="py-4 px-6 text-gray-700">{patient.groupe_sanguin || '-'}</td>
+                        <td className="py-4 px-6 text-gray-700">-</td>
                         <td className="py-4 px-6 text-center">
                           {/* Profile Icon */}
                           <Link href={`/dashboard/assistant/patients/${patient.id}`}>

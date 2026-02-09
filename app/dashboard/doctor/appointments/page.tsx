@@ -1,28 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
+const API_URL = "http://localhost:8080/api/v1"
 
 interface Appointment {
   id: string
   date: string
-  time: string
-  patientName: string
-  doctorName: string
-  reason: string
-  status: 'upcoming' | 'completed'
-}
-
-interface AppointmentFormData {
-  doctorName: string
-  patientName: string
-  date: string
-  time: string
-  reason: string
+  statut: string
+  patient: { utilisateur?: { prenom: string; nom: string } }
+  medecin: { utilisateur?: { prenom: string; nom: string } }
+  raison: string
 }
 
 export default function DoctorAppointments() {
@@ -31,97 +23,49 @@ export default function DoctorAppointments() {
   const [dateFilter, setDateFilter] = useState('')
   const [doctorFilter, setDoctorFilter] = useState('')
 
+  const [allAppointments, setAllAppointments] = useState<Appointment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [doctorId, setDoctorId] = useState<string>('')
 
-  // New Appointments filters
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        setLoading(true)
+        const storedDoctorId = localStorage.getItem("userId")
+        if (storedDoctorId) {
+          setDoctorId(storedDoctorId)
+          const res = await fetch(`${API_URL}/medecin/${storedDoctorId}/rendezvous`)
+          if (res.ok) {
+            const data = await res.json()
+            setAllAppointments(data)
+          }
+        }
+      } catch (error) {
+        console.log("[v0] Error fetching appointments:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchAppointments()
+  }, [])
+
+  // Filters
   const [newAptSearch, setNewAptSearch] = useState('')
   const [newAptDate, setNewAptDate] = useState('')
-  const [newAptDoctor, setNewAptDoctor] = useState('')
 
   // History Appointments filters
   const [historyAptSearch, setHistoryAptSearch] = useState('')
   const [historyAptDate, setHistoryAptDate] = useState('')
-  const [historyAptDoctor, setHistoryAptDoctor] = useState('')
-
-  // Mock appointments data
-  const [allAppointments] = useState<Appointment[]>([
-    {
-      id: '1',
-      date: '05/12/2025',
-      time: '9:30 AM',
-      patientName: 'Fatima Zahra Raiss',
-      doctorName: 'Dr. Fatima Marouon',
-      reason: 'Check Up',
-      status: 'upcoming',
-    },
-    {
-      id: '2',
-      date: '05/12/2025',
-      time: '9:30 AM',
-      patientName: 'Fouad Raissouni',
-      doctorName: 'Dr. Fatima Marouon',
-      reason: 'Follow up',
-      status: 'upcoming',
-    },
-    {
-      id: '3',
-      date: '05/12/2025',
-      time: '9:30 AM',
-      patientName: 'Krishtav Rajan',
-      doctorName: 'Dr. Fatima Marouon',
-      reason: 'Follow up',
-      status: 'upcoming',
-    },
-    {
-      id: '4',
-      date: '05/12/2025',
-      time: '9:30 AM',
-      patientName: 'Sumanth Tinson',
-      doctorName: 'Dr. Fatima Marouon',
-      reason: 'Check Up',
-      status: 'upcoming',
-    },
-    {
-      id: '5',
-      date: '05/12/2025',
-      time: '9:30 AM',
-      patientName: 'EG Subramani',
-      doctorName: 'Dr. Fatima Marouon',
-      reason: 'Check Up',
-      status: 'upcoming',
-    },
-    {
-      id: '6',
-      date: '05/12/2025',
-      time: '9:30 AM',
-      patientName: 'Ranjan Maari',
-      doctorName: 'Dr. Fatima Marouon',
-      reason: 'Check Up',
-      status: 'upcoming',
-    },
-    {
-      id: '7',
-      date: '05/12/2025',
-      time: '9:30 AM',
-      patientName: 'Philliplie Gopal',
-      doctorName: 'Dr. Fatima Marouon',
-      reason: 'Check Up',
-      status: 'upcoming',
-    },
-  ])
 
   const filteredAppointments = allAppointments
-    .filter((apt) => apt.status === (activeTab === 'new' ? 'upcoming' : 'completed'))
     .filter((apt) => {
       const currentSearch = activeTab === 'new' ? newAptSearch : historyAptSearch
-      return !currentSearch || apt.patientName.toLowerCase().includes(currentSearch.toLowerCase())
+      const patientName = `${apt.patient?.utilisateur?.prenom} ${apt.patient?.utilisateur?.nom}`.toLowerCase()
+      return !currentSearch || patientName.includes(currentSearch.toLowerCase())
     })
     .filter((apt) => {
       const currentDate = activeTab === 'new' ? newAptDate : historyAptDate
-      return !currentDate || apt.date === currentDate
-    })
-    .filter((apt) => {
-      const currentDoctor = activeTab === 'new' ? newAptDoctor : historyAptDoctor
-      return !currentDoctor || apt.doctorName === currentDoctor
+      return !currentDate || apt.date?.split('T')[0] === currentDate
     })
 
   const handleCancelAppointment = (appointmentId: string) => {
@@ -216,28 +160,32 @@ export default function DoctorAppointments() {
                 <thead>
                   <tr className="border-b border-gray-200 bg-white">
                     <th className="text-left py-4 px-6 font-semibold text-gray-800 text-sm">Date</th>
-                    <th className="text-left py-4 px-6 font-semibold text-gray-800 text-sm">Time</th>
                     <th className="text-left py-4 px-6 font-semibold text-gray-800 text-sm">Patient Name</th>
-                    <th className="text-left py-4 px-6 font-semibold text-gray-800 text-sm">Doctor Name</th>
                     <th className="text-left py-4 px-6 font-semibold text-gray-800 text-sm">Reason</th>
-                    <th className="text-center py-4 px-6 font-semibold text-gray-800 text-sm">User Action</th>
+                    <th className="text-left py-4 px-6 font-semibold text-gray-800 text-sm">Status</th>
+                    <th className="text-center py-4 px-6 font-semibold text-gray-800 text-sm">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredAppointments.length === 0 ? (
+                  {loading ? (
                     <tr>
-                      <td colSpan={6} className="text-center py-12 text-gray-500">
-                        No appointments found.
-                      </td>
+                      <td colSpan={5} className="text-center py-12 text-gray-500">Loading...</td>
+                    </tr>
+                  ) : filteredAppointments.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="text-center py-12 text-gray-500">No appointments found.</td>
                     </tr>
                   ) : (
                     filteredAppointments.map((appointment) => (
                       <tr key={appointment.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
-                        <td className="py-4 px-6 font-medium text-gray-900">{appointment.date}</td>
-                        <td className="py-4 px-6 text-gray-700">{appointment.time}</td>
-                        <td className="py-4 px-6 text-gray-700">{appointment.patientName}</td>
-                        <td className="py-4 px-6 text-gray-700">{appointment.doctorName}</td>
-                        <td className="py-4 px-6 text-gray-700">{appointment.reason}</td>
+                        <td className="py-4 px-6 text-gray-700">
+                          {new Date(appointment.date).toLocaleDateString()}
+                        </td>
+                        <td className="py-4 px-6 text-gray-700">
+                          {appointment.patient?.utilisateur?.prenom} {appointment.patient?.utilisateur?.nom}
+                        </td>
+                        <td className="py-4 px-6 text-gray-700">{appointment.raison}</td>
+                        <td className="py-4 px-6 text-gray-700">{appointment.statut}</td>
                         <td className="py-4 px-6 text-center">
                           <button
                             onClick={() => handleCancelAppointment(appointment.id)}
@@ -290,12 +238,7 @@ export default function DoctorAppointments() {
         )}
       </div>
 
-      {/* New Appointment Modal */}
-      <NewAppointmentModal 
-        isOpen={showNewAppointmentModal}
-        onClose={() => setShowNewAppointmentModal(false)}
-        onConfirm={handleNewAppointmentConfirm}
-      />
+
     </DashboardLayout>
   )
 }
