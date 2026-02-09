@@ -150,48 +150,7 @@ export default function DoctorProfile() {
           </CardContent>
         </Card>
 
-        {/* Additional Information */}
-        <div className="grid grid-cols-2 gap-6">
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-[#0A1F44] mb-4">Account Status</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Status:</span>
-                  <span className="font-semibold text-green-600">Active</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Member Since:</span>
-                  <span className="font-semibold text-gray-900">Jan 2024</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Last Login:</span>
-                  <span className="font-semibold text-gray-900">Today at 9:30 AM</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-[#0A1F44] mb-4">Quick Stats</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Patients:</span>
-                  <span className="font-semibold text-gray-900">--</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Appointments:</span>
-                  <span className="font-semibold text-gray-900">--</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Avg. Rating:</span>
-                  <span className="font-semibold text-gray-900">--</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </DashboardLayout>
   )

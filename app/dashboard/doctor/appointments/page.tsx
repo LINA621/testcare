@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import NewAppointmentModal from '@/components/modals/NewAppointmentModal'
+
 
 interface Appointment {
   id: string
@@ -30,7 +30,7 @@ export default function DoctorAppointments() {
   const [searchTerm, setSearchTerm] = useState('')
   const [dateFilter, setDateFilter] = useState('')
   const [doctorFilter, setDoctorFilter] = useState('')
-  const [showNewAppointmentModal, setShowNewAppointmentModal] = useState(false)
+
 
   // New Appointments filters
   const [newAptSearch, setNewAptSearch] = useState('')
@@ -129,29 +129,14 @@ export default function DoctorAppointments() {
     // API call to cancel appointment would go here
   }
 
-  const handleNewAppointmentConfirm = (data: AppointmentFormData) => {
-    console.log('[v0] New appointment created:', data)
-    // API call to create appointment would go here
-    setShowNewAppointmentModal(false)
-  }
+
 
   return (
     <DashboardLayout userRole="doctor" pageTitle="Appointments">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-[#0A1F44]">Appointments</h1>
-          </div>
-          <Button 
-            onClick={() => setShowNewAppointmentModal(true)}
-            className="bg-[#0066FF] text-white hover:bg-[#0052CC] flex items-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-            New Appointment
-          </Button>
+        <div>
+          <h1 className="text-2xl font-bold text-[#0A1F44]">Appointments</h1>
         </div>
 
         {/* Tabs */}

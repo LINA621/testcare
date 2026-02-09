@@ -123,12 +123,6 @@ export default function AssistantProfile() {
               </div>
             </div>
 
-            {/* Account Type */}
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="font-semibold text-blue-900">Account Type</p>
-              <p className="text-sm text-blue-700 mt-1">Medical Assistant</p>
-            </div>
-
             {/* Save Button */}
             {isEditing && (
               <div className="flex gap-3 pt-4 border-t border-gray-200">
