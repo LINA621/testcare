@@ -158,70 +158,73 @@ export default function PatientProfile() {
                       disabled={!isEditing}
                       className="disabled:bg-gray-100 disabled:cursor-not-allowed"
                     />
-              </div>
+                  </div>
 
-              {/* Phone */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
-                <Input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  className="disabled:bg-gray-100 disabled:cursor-not-allowed"
-                />
-              </div>
+                  {/* Phone */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
+                    <Input
+                      type="tel"
+                      name="telephone"
+                      value={formData.telephone}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      className="disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    />
+                  </div>
 
-              {/* Date of Birth */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Date of Birth</label>
-                <Input
-                  type="date"
-                  name="dateOfBirth"
-                  value={formData.dateOfBirth}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  className="disabled:bg-gray-100 disabled:cursor-not-allowed"
-                />
-              </div>
+                  {/* Date of Birth */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Date of Birth</label>
+                    <Input
+                      type="date"
+                      name="date_naissance"
+                      value={formData.date_naissance}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      className="disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    />
+                  </div>
 
-              {/* Gender */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Gender</label>
-                <select
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066FF] disabled:bg-gray-100 disabled:cursor-not-allowed"
-                >
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
+                  {/* Gender */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Gender</label>
+                    <select
+                      name="genre"
+                      value={formData.genre}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066FF] disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="M">Male</option>
+                      <option value="F">Female</option>
                   <option value="Other">Other</option>
                 </select>
               </div>
 
-              {/* Blood Group */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Blood Group</label>
-                <select
-                  name="bloodGroup"
-                  value={formData.bloodGroup}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066FF] disabled:bg-gray-100 disabled:cursor-not-allowed"
-                >
-                  <option value="A+">A+</option>
-                  <option value="A-">A-</option>
-                  <option value="B+">B+</option>
-                  <option value="B-">B-</option>
-                  <option value="AB+">AB+</option>
-                  <option value="AB-">AB-</option>
-                  <option value="O+">O+</option>
-                  <option value="O-">O-</option>
-                </select>
-              </div>
+                  {/* Blood Group */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Blood Group</label>
+                    <select
+                      name="groupe_sanguin"
+                      value={formData.groupe_sanguin}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066FF] disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    >
+                      <option value="">Select Blood Group</option>
+                      <option value="A+">A+</option>
+                      <option value="A-">A-</option>
+                      <option value="B+">B+</option>
+                      <option value="B-">B-</option>
+                      <option value="AB+">AB+</option>
+                      <option value="AB-">AB-</option>
+                      <option value="O+">O+</option>
+                      <option value="O-">O-</option>
+                    </select>
+                  </div>
+                </div>
 
               {/* Emergency Contact */}
               <div>

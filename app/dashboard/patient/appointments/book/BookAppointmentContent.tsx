@@ -8,28 +8,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
+const API_URL = "http://localhost:8080/api/v1"
+
 interface DoctorInfo {
-  id: number
-  name: string
-  specialty: string
+  id: string
+  utilisateur?: { prenom: string; nom: string }
+  specialite?: { libelle: string }
 }
 
-const doctorsList: { [key: string]: DoctorInfo } = {
-  '1': { id: 1, name: 'Dr. John Smith', specialty: 'Cardiologist' },
-  '2': { id: 2, name: 'Dr. Sarah Johnson', specialty: 'Orthopedic Surgeon' },
-  '3': { id: 3, name: 'Dr. Michael Lee', specialty: 'Pediatrician' },
-  '4': { id: 4, name: 'Dr. Emily Davis', specialty: 'Gynecologist' },
-  '5': { id: 5, name: 'Dr. Fatima Marouon', specialty: 'General Practitioner' },
-  '6': { id: 6, name: 'Dr. Ahmed Hassan', specialty: 'Dermatologist' },
-}
-
-// Mock patient data (pre-filled from patient profile)
-const patientData = {
-  name: 'Douae Rateb Boulaich',
-  number: 'P-2024-001',
-  bloodType: 'O+',
-  email: 'douae@example.com',
-  phone: '+212 612345678',
+interface PatientData {
+  prenom: string
+  nom: string
+  email: string
+  telephone: string
 }
 
 // Generate available time slots (8 AM to 6 PM, 30-minute intervals)
@@ -65,19 +56,55 @@ export function BookAppointmentContent() {
   const [reason, setReason] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [patientData, setPatientData] = useState<PatientData>({
+    prenom: '',
+    nom: '',
+    email: '',
+    telephone: '',
+  })
+  const [loadingDoctor, setLoadingDoctor] = useState(true)
 
   useEffect(() => {
-    if (doctorId && doctorsList[doctorId]) {
-      setSelectedDoctor(doctorsList[doctorId])
+    const fetchData = async () => {
+      try {
+        // Fetch patient data
+        const patientId = localStorage.getItem("userId")
+        if (patientId) {
+          const patientRes = await fetch(`${API_URL}/patient/${patientId}`)
+          if (patientRes.ok) {
+            const patientInfo = await patientRes.json()
+            setPatientData({
+              prenom: patientInfo.utilisateur?.prenom || '',
+              nom: patientInfo.utilisateur?.nom || '',
+              email: patientInfo.compte?.email || '',
+              telephone: patientInfo.utilisateur?.telephone || '',
+            })
+          }
+        }
+
+        // Fetch doctor if doctorId is provided
+        if (doctorId) {
+          const doctorRes = await fetch(`${API_URL}/medecin/${doctorId}`)
+          if (doctorRes.ok) {
+            const doctorInfo = await doctorRes.json()
+            setSelectedDoctor(doctorInfo)
+          }
+        }
+
+        // Pre-fill data if rescheduling
+        if (isRescheduling) {
+          const prefilledDate = searchParams.get('date')
+          const prefilledTime = searchParams.get('time')
+          if (prefilledDate) setSelectedDate(prefilledDate)
+          if (prefilledTime) setSelectedTime(prefilledTime)
+        }
+      } catch (error) {
+        console.log("[v0] Error fetching data:", error)
+      } finally {
+        setLoadingDoctor(false)
+      }
     }
-    
-    // Pre-fill data if rescheduling
-    if (isRescheduling) {
-      const prefilledDate = searchParams.get('date')
-      const prefilledTime = searchParams.get('time')
-      if (prefilledDate) setSelectedDate(prefilledDate)
-      if (prefilledTime) setSelectedTime(prefilledTime)
-    }
+    fetchData()
   }, [doctorId, isRescheduling, searchParams])
 
   useEffect(() => {
@@ -100,36 +127,65 @@ export function BookAppointmentContent() {
     }
   }, [selectedDate])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
 
-    if (isRescheduling) {
-      console.log('[v0] Rescheduling appointment:', {
-        appointmentId: rescheduleId,
-        newDate: selectedDate,
-        newTime: selectedTime,
-        // API call: PUT /rendezvous/update/{id}
-      })
-    } else {
-      console.log('[v0] Booking new appointment:', {
-        doctor: selectedDoctor,
-        date: selectedDate,
-        time: selectedTime,
-        reason: reason,
-        patientInfo: patientData,
-        // API call: POST /patient/rendezvous
-      })
-    }
+    try {
+      if (isRescheduling) {
+        const response = await fetch(`${API_URL}/rendezvous/${rescheduleId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            date: selectedDate,
+            raison: reason,
+          }),
+        })
+        if (response.ok) {
+          console.log("[v0] Appointment rescheduled successfully")
+          setSuccess(true)
+        }
+      } else {
+        const patientId = localStorage.getItem("userId")
+        const response = await fetch(`${API_URL}/rendezvous`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            patient_id: patientId,
+            medecin_id: doctorId,
+            date: `${selectedDate}T${selectedTime}`,
+            raison: reason,
+            statut: "Confirmé",
+          }),
+        })
+        if (response.ok) {
+          console.log("[v0] Appointment booked successfully")
+          setSuccess(true)
+        }
+      }
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false)
-      setSuccess(true)
       setTimeout(() => {
         router.push('/dashboard/patient/appointments')
       }, 2000)
-    }, 1000)
+    } catch (error) {
+      console.log("[v0] Error submitting appointment:", error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  if (loadingDoctor) {
+    return (
+      <DashboardLayout userRole="patient" pageTitle="Book Appointment">
+        <div className="max-w-2xl mx-auto">
+          <Card>
+            <CardContent className="p-8 text-center">
+              <p className="text-gray-600">Loading...</p>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    )
   }
 
   if (!selectedDoctor) {
@@ -173,7 +229,7 @@ export function BookAppointmentContent() {
               <p className="text-gray-600">
                 {isRescheduling 
                   ? `Your appointment has been rescheduled to ${selectedDate} at ${selectedTime}.`
-                  : `Your appointment with ${selectedDoctor.name} on ${selectedDate} at ${selectedTime} has been confirmed.`
+                  : `Your appointment with Dr. ${selectedDoctor.utilisateur?.prenom} ${selectedDoctor.utilisateur?.nom} on ${selectedDate} at ${selectedTime} has been confirmed.`
                 }
               </p>
             </CardContent>
@@ -197,7 +253,9 @@ export function BookAppointmentContent() {
                           </svg>
                         </div>
                         <div>
-                          <h3 className="font-semibold text-[#0A1F44]">{selectedDoctor.name}</h3>
+                          <h3 className="font-semibold text-[#0A1F44]">
+                            Dr. {selectedDoctor.utilisateur?.prenom} {selectedDoctor.utilisateur?.nom}
+                          </h3>
                           <p className="text-sm text-[#0066FF]">{selectedDoctor.specialty}</p>
                         </div>
                       </div>

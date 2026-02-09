@@ -146,19 +146,8 @@ export default function DoctorProfile() {
                           className="w-full"
                         />
                       </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-800 mb-2">License Number</label>
-                    <Input
-                      name="licenseNumber"
-                      value={formData.licenseNumber}
-                      onChange={handleInputChange}
-                      placeholder="Enter license number"
-                      disabled={!isEditing}
-                      className="w-full"
-                    />
+                    </div>
                   </div>
-                </div>
-              </div>
 
               {/* Professional Information */}
               <div>
@@ -167,8 +156,8 @@ export default function DoctorProfile() {
                   <div>
                     <label className="block text-sm font-semibold text-gray-800 mb-2">Specialization</label>
                     <Input
-                      name="specialization"
-                      value={formData.specialization}
+                      name="specialite"
+                      value={formData.specialite}
                       onChange={handleInputChange}
                       placeholder="e.g., Cardiology"
                       disabled={!isEditing}
@@ -197,8 +186,8 @@ export default function DoctorProfile() {
             </form>
           </CardContent>
         </Card>
-
-
+          </>
+        )}
       </div>
     </DashboardLayout>
   )
